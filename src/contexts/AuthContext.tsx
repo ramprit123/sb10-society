@@ -1,10 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 interface User {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'admin' | 'manager' | 'staff';
+  role: "super_admin" | "admin" | "manager" | "staff";
   tenants: string[];
   avatar?: string;
 }
@@ -30,18 +36,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check for existing session
-    const savedUser = localStorage.getItem('user');
+    const savedUser = localStorage.getItem("user");
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
@@ -52,22 +60,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Mock user data based on email
       const mockUser: User = {
-        id: '1',
+        id: "1",
         email,
-        name: email === 'admin@societyhub.com' ? 'Admin User' : 'John Doe',
-        role: email === 'admin@societyhub.com' ? 'super_admin' : 'admin',
-        tenants: ['society-1', 'society-2', 'society-3'],
-        avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150'
+        name: email === "admin@societyhub.com" ? "Admin User" : "John Doe",
+        role: email === "admin@societyhub.com" ? "super_admin" : "admin",
+        tenants: ["society-1", "society-2", "society-3"],
+        avatar:
+          "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",
       };
 
       setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
+      localStorage.setItem("user", JSON.stringify(mockUser));
     } catch (error) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     } finally {
       setIsLoading(false);
     }
@@ -77,20 +86,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       const newUser: User = {
         id: Date.now().toString(),
         email: userData.email,
         name: userData.name,
-        role: userData.role as User['role'],
+        role: userData.role as User["role"],
         tenants: [],
       };
 
       setUser(newUser);
-      localStorage.setItem('user', JSON.stringify(newUser));
+      localStorage.setItem("user", JSON.stringify(newUser));
     } catch (error) {
-      throw new Error('Registration failed');
+      throw new Error("Registration failed");
     } finally {
       setIsLoading(false);
     }
@@ -98,8 +107,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('currentTenant');
+    localStorage.removeItem("user");
+    localStorage.removeItem("currentTenant");
   };
 
   return (
