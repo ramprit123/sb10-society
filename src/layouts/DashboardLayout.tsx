@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   Menu,
   X,
@@ -25,9 +25,9 @@ import {
   Cog,
   LogOut,
   Building,
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTenant } from '../contexts/TenantContext';
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useTenant } from "../contexts/TenantContext";
 
 interface NavigationItem {
   name: string;
@@ -43,7 +43,7 @@ const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tenantDropdownOpen, setTenantDropdownOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([
-    'Overview',
+    "Overview",
   ]);
   const { user, logout } = useAuth();
   const { currentTenant, tenants, switchTenant, isGlobalView, setGlobalView } =
@@ -53,165 +53,165 @@ const DashboardLayout: React.FC = () => {
 
   const navigationItems: { category: string; items: NavigationItem[] }[] = [
     {
-      category: 'Overview',
+      category: "Overview",
       items: [
         {
-          name: 'Dashboard',
+          name: "Dashboard",
           icon: Home,
-          path: isGlobalView ? '/' : `/tenant/${currentTenant?.id}/dashboard`,
+          path: isGlobalView ? "/" : `/tenant/${currentTenant?.id}/dashboard`,
         },
         {
-          name: 'All Societies',
+          name: "All Societies",
           icon: Building2,
-          path: '/societies',
+          path: "/societies",
           globalOnly: true,
-          roles: ['super_admin', 'admin'],
+          roles: ["super_admin", "admin"],
         },
         {
-          name: 'Analytics',
+          name: "Analytics",
           icon: BarChart3,
-          path: '/analytics',
+          path: "/analytics",
           globalOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
       ],
     },
     {
-      category: 'Residents & Finance',
+      category: "Residents & Finance",
       items: [
         {
-          name: 'Residents',
+          name: "Residents",
           icon: Users,
           path: `/tenant/${currentTenant?.id}/residents`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager', 'staff'],
+          roles: ["super_admin", "admin", "manager", "staff"],
         },
         {
-          name: 'Maintenance & Bills',
+          name: "Maintenance & Bills",
           icon: CreditCard,
           path: `/tenant/${currentTenant?.id}/maintenance`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
         {
-          name: 'Payments',
+          name: "Payments",
           icon: FileText,
           path: `/tenant/${currentTenant?.id}/payments`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
         {
-          name: 'Financial Reports',
+          name: "Financial Reports",
           icon: TrendingUp,
           path: `/tenant/${currentTenant?.id}/financial-reports`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
       ],
     },
     {
-      category: 'Operations',
+      category: "Operations",
       items: [
         {
-          name: 'Complaints',
+          name: "Complaints",
           icon: MessageSquare,
           path: `/tenant/${currentTenant?.id}/complaints`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager', 'staff'],
+          roles: ["super_admin", "admin", "manager", "staff"],
         },
         {
-          name: 'Facilities',
+          name: "Facilities",
           icon: Building,
           path: `/tenant/${currentTenant?.id}/facilities`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
       ],
     },
     {
-      category: 'Communication',
+      category: "Communication",
       items: [
         {
-          name: 'Events & Notices',
+          name: "Events & Notices",
           icon: Calendar,
           path: `/tenant/${currentTenant?.id}/events`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
         {
-          name: 'Announcements',
+          name: "Announcements",
           icon: Megaphone,
           path: `/tenant/${currentTenant?.id}/announcements`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
         {
-          name: 'Meetings',
+          name: "Meetings",
           icon: Users,
           path: `/tenant/${currentTenant?.id}/meetings`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
       ],
     },
     {
-      category: 'Security',
+      category: "Security",
       items: [
         {
-          name: 'Security Guards',
+          name: "Security Guards",
           icon: Shield,
           path: `/tenant/${currentTenant?.id}/security`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
         {
-          name: 'Visitor Logs',
+          name: "Visitor Logs",
           icon: Eye,
           path: `/tenant/${currentTenant?.id}/visitor-logs`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager', 'staff'],
+          roles: ["super_admin", "admin", "manager", "staff"],
         },
         {
-          name: 'Access Control',
+          name: "Access Control",
           icon: Lock,
           path: `/tenant/${currentTenant?.id}/access-control`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin', 'manager'],
+          roles: ["super_admin", "admin", "manager"],
         },
       ],
     },
     {
-      category: 'Settings',
+      category: "Settings",
       items: [
         {
-          name: 'Society Settings',
+          name: "Society Settings",
           icon: Settings,
           path: `/tenant/${currentTenant?.id}/settings`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin'],
+          roles: ["super_admin", "admin"],
         },
         {
-          name: 'User Management',
+          name: "User Management",
           icon: UserCog,
           path: `/tenant/${currentTenant?.id}/user-management`,
           tenantOnly: true,
-          roles: ['super_admin', 'admin'],
+          roles: ["super_admin", "admin"],
         },
         {
-          name: 'System Settings',
+          name: "System Settings",
           icon: Cog,
           path: `/tenant/${currentTenant?.id}/system-settings`,
           tenantOnly: true,
-          roles: ['super_admin'],
+          roles: ["super_admin"],
         },
       ],
     },
   ];
 
   const handleTenantSwitch = (tenantId: string) => {
-    if (tenantId === 'global') {
+    if (tenantId === "global") {
       setGlobalView(true);
-      navigate('/');
+      navigate("/");
     } else {
       switchTenant(tenantId);
       navigate(`/tenant/${tenantId}/dashboard`);
@@ -233,7 +233,7 @@ const DashboardLayout: React.FC = () => {
 
   const hasPermission = (item: NavigationItem) => {
     if (!item.roles) return true;
-    return item.roles.includes(user?.role || '');
+    return item.roles.includes(user?.role || "");
   };
 
   const filteredNavigationItems = navigationItems
@@ -282,13 +282,13 @@ const DashboardLayout: React.FC = () => {
               <div className="text-left">
                 <div className="text-sm font-medium text-gray-900">
                   {isGlobalView
-                    ? 'All Societies'
-                    : currentTenant?.name || 'Select Society'}
+                    ? "All Societies"
+                    : currentTenant?.name || "Select Society"}
                 </div>
                 <div className="text-xs text-gray-500">
                   {isGlobalView
                     ? `${tenants.length} societies`
-                    : 'Current Society'}
+                    : "Current Society"}
                 </div>
               </div>
             </div>
@@ -298,9 +298,9 @@ const DashboardLayout: React.FC = () => {
           {tenantDropdownOpen && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
               <button
-                onClick={() => handleTenantSwitch('global')}
+                onClick={() => handleTenantSwitch("global")}
                 className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
-                  isGlobalView ? 'bg-purple-50 text-purple-700' : ''
+                  isGlobalView ? "bg-purple-50 text-purple-700" : ""
                 }`}
               >
                 <div className="font-medium">All Societies</div>
@@ -312,8 +312,8 @@ const DashboardLayout: React.FC = () => {
                   onClick={() => handleTenantSwitch(tenant.id)}
                   className={`w-full px-4 py-3 text-left hover:bg-gray-50 border-t border-gray-100 ${
                     currentTenant?.id === tenant.id && !isGlobalView
-                      ? 'bg-purple-50 text-purple-700'
-                      : ''
+                      ? "bg-purple-50 text-purple-700"
+                      : ""
                   }`}
                 >
                   <div className="font-medium">{tenant.name}</div>
@@ -365,8 +365,8 @@ const DashboardLayout: React.FC = () => {
                           }}
                           className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                             item.path && isActivePath(item.path)
-                              ? 'bg-purple-100 text-purple-700'
-                              : 'text-gray-700 hover:bg-gray-100'
+                              ? "bg-purple-100 text-purple-700"
+                              : "text-gray-700 hover:bg-gray-100"
                           }`}
                         >
                           <item.icon className="h-4 w-4 mr-3" />
@@ -395,8 +395,8 @@ const DashboardLayout: React.FC = () => {
                       }}
                       className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                         item.path && isActivePath(item.path)
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'text-gray-700 hover:bg-gray-100'
+                          ? "bg-purple-100 text-purple-700"
+                          : "text-gray-700 hover:bg-gray-100"
                       }`}
                     >
                       <item.icon className="h-5 w-5 mr-3" />
@@ -416,7 +416,7 @@ const DashboardLayout: React.FC = () => {
           <img
             src={
               user?.avatar ||
-              'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150'
+              "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150"
             }
             alt="Profile"
             className="h-8 w-8 rounded-full"
@@ -426,7 +426,7 @@ const DashboardLayout: React.FC = () => {
               {user?.name}
             </div>
             <div className="text-xs text-gray-500 capitalize">
-              {user?.role.replace('_', ' ')}
+              {user?.role.replace("_", " ")}
             </div>
           </div>
         </div>
@@ -451,7 +451,7 @@ const DashboardLayout: React.FC = () => {
       {/* Mobile Sidebar */}
       <div
         className={`fixed inset-0 z-50 lg:hidden ${
-          sidebarOpen ? 'block' : 'hidden'
+          sidebarOpen ? "block" : "hidden"
         }`}
       >
         <div
@@ -477,8 +477,8 @@ const DashboardLayout: React.FC = () => {
               </button>
               <h1 className="ml-4 lg:ml-0 text-xl sm:text-2xl font-semibold text-gray-900">
                 {isGlobalView
-                  ? 'Global Dashboard'
-                  : `${currentTenant?.name || 'Dashboard'}`}
+                  ? "Global Dashboard"
+                  : `${currentTenant?.name || "Dashboard"}`}
               </h1>
             </div>
 
