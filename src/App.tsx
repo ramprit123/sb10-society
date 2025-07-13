@@ -3,33 +3,33 @@ import {
   Routes,
   Route,
   Navigate,
-} from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import { TenantProvider } from './contexts/TenantContext';
-import AuthLayout from './layouts/AuthLayout';
-import DashboardLayout from './layouts/DashboardLayout';
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import Dashboard from './pages/Dashboard';
-import AllSocieties from './pages/AllSocieties';
-import Residents from './pages/Residents';
-import MaintenanceBills from './pages/MaintenanceBills';
-import Complaints from './pages/Complaints';
-import Facilities from './pages/Facilities';
-import Security from './pages/Security';
-import EventsNotices from './pages/EventsNotices';
-import Settings from './pages/Settings';
-import Analytics from './pages/Analytics';
-import Payments from './pages/Payments';
-import FinancialReports from './pages/FinancialReports';
-import Announcements from './pages/Announcements';
-import Meetings from './pages/Meetings';
-import VisitorLogs from './pages/VisitorLogs';
-import AccessControl from './pages/AccessControl';
-import UserManagement from './pages/UserManagement';
-import SystemSettings from './pages/SystemSettings';
-import ProtectedRoute from './components/ProtectedRoute';
-import TenantRoute from './components/TenantRoute';
+} from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { TenantProvider } from "./contexts/TenantContext";
+import AuthLayout from "./layouts/AuthLayout";
+import DashboardLayout from "./layouts/DashboardLayout";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Dashboard from "./pages/Dashboard";
+import AllSocieties from "./pages/AllSocieties";
+import Residents from "./pages/Residents";
+import MaintenanceBills from "./pages/MaintenanceBills";
+import Complaints from "./pages/Complaints";
+import Facilities from "./pages/Facilities";
+import Security from "./pages/Security";
+import EventsNotices from "./pages/EventsNotices";
+import Settings from "./pages/Settings";
+import Analytics from "./pages/Analytics";
+import Payments from "./pages/Payments";
+import FinancialReports from "./pages/FinancialReports";
+import Announcements from "./pages/Announcements";
+import Meetings from "./pages/Meetings";
+import VisitorLogs from "./pages/VisitorLogs";
+import AccessControl from "./pages/AccessControl";
+import UserManagement from "./pages/UserManagement";
+import SystemSettings from "./pages/SystemSettings";
+import ProtectedRoute from "./components/ProtectedRoute";
+import TenantRoute from "./components/TenantRoute";
 
 function App() {
   return (

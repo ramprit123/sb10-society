@@ -1,25 +1,42 @@
-import React, { useState } from 'react';
-import { Plus, Search, MapPin, Users, Building, DollarSign, Edit, Trash2, Eye } from 'lucide-react';
-import { useTenant } from '../contexts/TenantContext';
-import { useNavigate } from 'react-router-dom';
-import AddSocietyModal from '../components/modals/AddSocietyModal';
+import React, { useState } from "react";
+import {
+  Plus,
+  Search,
+  MapPin,
+  Users,
+  Building,
+  DollarSign,
+  Edit,
+  Trash2,
+  Eye,
+} from "lucide-react";
+import { useTenant } from "../contexts/TenantContext";
+import { useNavigate } from "react-router-dom";
+import AddSocietyModal from "../components/modals/AddSocietyModal";
 
 const AllSocieties: React.FC = () => {
   const { tenants, deleteTenant } = useTenant();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [addSocietyOpen, setAddSocietyOpen] = useState(false);
   const navigate = useNavigate();
 
-  const filteredTenants = tenants.filter(tenant =>
-    tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    tenant.address.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTenants = tenants.filter(
+    (tenant) =>
+      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tenant.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalStats = {
     totalSocieties: tenants.length,
     totalUnits: tenants.reduce((sum, tenant) => sum + tenant.totalUnits, 0),
-    totalResidents: tenants.reduce((sum, tenant) => sum + tenant.totalResidents, 0),
-    totalPendingDues: tenants.reduce((sum, tenant) => sum + tenant.pendingDues, 0)
+    totalResidents: tenants.reduce(
+      (sum, tenant) => sum + tenant.totalResidents,
+      0
+    ),
+    totalPendingDues: tenants.reduce(
+      (sum, tenant) => sum + tenant.pendingDues,
+      0
+    ),
   };
 
   const handleViewSociety = (tenantId: string) => {
@@ -27,7 +44,11 @@ const AllSocieties: React.FC = () => {
   };
 
   const handleDeleteSociety = (tenantId: string) => {
-    if (window.confirm('Are you sure you want to delete this society? This action cannot be undone.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this society? This action cannot be undone."
+      )
+    ) {
       deleteTenant(tenantId);
     }
   };
@@ -38,7 +59,9 @@ const AllSocieties: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">All Societies</h1>
-          <p className="text-gray-600 mt-1">Manage all your society properties from one place</p>
+          <p className="text-gray-600 mt-1">
+            Manage all your society properties from one place
+          </p>
         </div>
         <button
           onClick={() => setAddSocietyOpen(true)}
@@ -54,8 +77,12 @@ const AllSocieties: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Societies</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">{totalStats.totalSocieties}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Total Societies
+              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                {totalStats.totalSocieties}
+              </p>
             </div>
             <div className="bg-blue-500 p-3 rounded-lg">
               <Building className="h-6 w-6 text-white" />
@@ -67,7 +94,9 @@ const AllSocieties: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Units</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">{totalStats.totalUnits.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                {totalStats.totalUnits.toLocaleString()}
+              </p>
             </div>
             <div className="bg-green-500 p-3 rounded-lg">
               <Building className="h-6 w-6 text-white" />
@@ -78,8 +107,12 @@ const AllSocieties: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Residents</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">{totalStats.totalResidents.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Total Residents
+              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                {totalStats.totalResidents.toLocaleString()}
+              </p>
             </div>
             <div className="bg-purple-500 p-3 rounded-lg">
               <Users className="h-6 w-6 text-white" />
@@ -90,8 +123,12 @@ const AllSocieties: React.FC = () => {
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Pending Dues</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">₹{totalStats.totalPendingDues.toLocaleString()}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Total Pending Dues
+              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">
+                ₹{totalStats.totalPendingDues.toLocaleString()}
+              </p>
             </div>
             <div className="bg-orange-500 p-3 rounded-lg">
               <DollarSign className="h-6 w-6 text-white" />
@@ -117,21 +154,30 @@ const AllSocieties: React.FC = () => {
       {/* Societies Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTenants.map((tenant) => (
-          <div key={tenant.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+          <div
+            key={tenant.id}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+          >
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{tenant.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {tenant.name}
+                  </h3>
                   <div className="flex items-center text-sm text-gray-500 mt-1">
                     <MapPin className="h-4 w-4 mr-1" />
                     <span className="truncate">{tenant.address}</span>
                   </div>
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  tenant.status === 'active' ? 'bg-green-100 text-green-800' :
-                  tenant.status === 'inactive' ? 'bg-red-100 text-red-800' :
-                  'bg-yellow-100 text-yellow-800'
-                }`}>
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    tenant.status === "active"
+                      ? "bg-green-100 text-green-800"
+                      : tenant.status === "inactive"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
                   {tenant.status}
                 </span>
               </div>
@@ -139,19 +185,27 @@ const AllSocieties: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
                   <p className="text-sm text-gray-500">Total Units</p>
-                  <p className="text-lg font-semibold text-gray-900">{tenant.totalUnits}</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {tenant.totalUnits}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Occupied</p>
-                  <p className="text-lg font-semibold text-gray-900">{tenant.occupiedUnits}</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {tenant.occupiedUnits}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Residents</p>
-                  <p className="text-lg font-semibold text-gray-900">{tenant.totalResidents}</p>
+                  <p className="text-lg font-semibold text-gray-900">
+                    {tenant.totalResidents}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Pending Dues</p>
-                  <p className="text-lg font-semibold text-orange-600">₹{tenant.pendingDues.toLocaleString()}</p>
+                  <p className="text-lg font-semibold text-orange-600">
+                    ₹{tenant.pendingDues.toLocaleString()}
+                  </p>
                 </div>
               </div>
 
@@ -181,9 +235,13 @@ const AllSocieties: React.FC = () => {
       {filteredTenants.length === 0 && (
         <div className="text-center py-12">
           <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No societies found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No societies found
+          </h3>
           <p className="text-gray-500 mb-4">
-            {searchTerm ? 'Try adjusting your search terms' : 'Get started by adding your first society'}
+            {searchTerm
+              ? "Try adjusting your search terms"
+              : "Get started by adding your first society"}
           </p>
           <button
             onClick={() => setAddSocietyOpen(true)}
@@ -194,9 +252,9 @@ const AllSocieties: React.FC = () => {
         </div>
       )}
 
-      <AddSocietyModal 
-        isOpen={addSocietyOpen} 
-        onClose={() => setAddSocietyOpen(false)} 
+      <AddSocietyModal
+        isOpen={addSocietyOpen}
+        onClose={() => setAddSocietyOpen(false)}
       />
     </div>
   );

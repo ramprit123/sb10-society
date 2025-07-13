@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -130,7 +130,7 @@ const Login: React.FC = () => {
         </p>
       </div>
 
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg hidden">
+      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
         <h4 className="font-medium text-blue-900 mb-2">Demo Credentials:</h4>
         <p className="text-sm text-blue-700">
           Email:{" "}
