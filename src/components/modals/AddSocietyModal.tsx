@@ -1,31 +1,34 @@
-import React, { useState } from 'react';
-import { X, Building, MapPin, Users, DollarSign } from 'lucide-react';
-import { useTenant } from '../../contexts/TenantContext';
+import React, { useState } from "react";
+import { X, Building, MapPin, Users, DollarSign } from "lucide-react";
+import { useSocietyStore } from "../../stores/societyStore";
 
 interface AddSocietyModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const AddSocietyModal: React.FC<AddSocietyModalProps> = ({ isOpen, onClose }) => {
-  const { addTenant } = useTenant();
+const AddSocietyModal: React.FC<AddSocietyModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
+  const { addSociety } = useSocietyStore();
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    totalUnits: '',
-    occupiedUnits: '',
-    totalResidents: '',
-    pendingDues: '',
-    status: 'active' as 'active' | 'inactive' | 'maintenance',
-    currency: 'INR',
-    timezone: 'Asia/Kolkata',
-    maintenanceDay: '1'
+    name: "",
+    address: "",
+    totalUnits: "",
+    occupiedUnits: "",
+    totalResidents: "",
+    pendingDues: "",
+    status: "active" as "active" | "inactive" | "maintenance",
+    currency: "INR",
+    timezone: "Asia/Kolkata",
+    maintenanceDay: "1",
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newTenant = {
+
+    const newSociety = {
       name: formData.name,
       address: formData.address,
       totalUnits: parseInt(formData.totalUnits),
@@ -36,32 +39,36 @@ const AddSocietyModal: React.FC<AddSocietyModalProps> = ({ isOpen, onClose }) =>
       settings: {
         currency: formData.currency,
         timezone: formData.timezone,
-        maintenanceDay: parseInt(formData.maintenanceDay)
-      }
+        maintenanceDay: parseInt(formData.maintenanceDay),
+      },
     };
 
-    addTenant(newTenant);
+    addSociety(newSociety);
     onClose();
-    
+
     // Reset form
     setFormData({
-      name: '',
-      address: '',
-      totalUnits: '',
-      occupiedUnits: '',
-      totalResidents: '',
-      pendingDues: '',
-      status: 'active',
-      currency: 'INR',
-      timezone: 'Asia/Kolkata',
-      maintenanceDay: '1'
+      name: "",
+      address: "",
+      totalUnits: "",
+      occupiedUnits: "",
+      totalResidents: "",
+      pendingDues: "",
+      status: "active",
+      currency: "INR",
+      timezone: "Asia/Kolkata",
+      maintenanceDay: "1",
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -70,11 +77,16 @@ const AddSocietyModal: React.FC<AddSocietyModalProps> = ({ isOpen, onClose }) =>
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
+        <div
+          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+          onClick={onClose}
+        ></div>
 
         <div className="inline-block w-full max-w-lg p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Add New Society</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Add New Society
+            </h3>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
@@ -242,7 +254,15 @@ const AddSocietyModal: React.FC<AddSocietyModalProps> = ({ isOpen, onClose }) =>
                 >
                   {Array.from({ length: 28 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>
-                      {i + 1}{i + 1 === 1 ? 'st' : i + 1 === 2 ? 'nd' : i + 1 === 3 ? 'rd' : 'th'} of month
+                      {i + 1}
+                      {i + 1 === 1
+                        ? "st"
+                        : i + 1 === 2
+                        ? "nd"
+                        : i + 1 === 3
+                        ? "rd"
+                        : "th"}{" "}
+                      of month
                     </option>
                   ))}
                 </select>

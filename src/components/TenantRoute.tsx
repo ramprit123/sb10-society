@@ -1,30 +1,38 @@
-import React, { useEffect } from 'react';
-import { Outlet, useParams, Navigate } from 'react-router-dom';
-import { useTenant } from '../contexts/TenantContext';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useEffect } from "react";
+import { Outlet, useParams, Navigate } from "react-router-dom";
+import { useSocietyStore } from "../stores/societyStore";
+import { useAuthStore } from "../stores/authStore";
 
 const TenantRoute: React.FC = () => {
   const { tenantId } = useParams<{ tenantId: string }>();
-  const { user } = useAuth();
-  const { tenants, switchTenant, currentTenant, setGlobalView } = useTenant();
+  const { profile } = useAuthStore();
+  const { societies, switchSociety, setGlobalView, fetchSocieties } =
+    useSocietyStore();
+
+  useEffect(() => {
+    // Fetch societies if not already loaded
+    if (societies.length === 0) {
+      fetchSocieties();
+    }
+  }, [societies.length, fetchSocieties]);
 
   useEffect(() => {
     if (tenantId) {
-      const tenant = tenants.find(t => t.id === tenantId);
-      if (tenant && user?.tenants.includes(tenant.id)) {
-        switchTenant(tenantId);
+      const society = societies.find((s) => s.id === tenantId);
+      if (society && profile?.tenants.includes(society.id)) {
+        switchSociety(tenantId);
         setGlobalView(false);
       }
     }
-  }, [tenantId, tenants, switchTenant, user, setGlobalView]);
+  }, [tenantId, societies, switchSociety, profile, setGlobalView]);
 
-  // Check if user has access to this tenant
-  if (tenantId && user && !user.tenants.includes(tenantId)) {
+  // Check if user has access to this tenant/society
+  if (tenantId && profile && !profile.tenants.includes(tenantId)) {
     return <Navigate to="/" replace />;
   }
 
-  // Check if tenant exists
-  if (tenantId && !tenants.find(t => t.id === tenantId)) {
+  // Check if society exists
+  if (tenantId && !societies.find((s) => s.id === tenantId)) {
     return <Navigate to="/" replace />;
   }
 

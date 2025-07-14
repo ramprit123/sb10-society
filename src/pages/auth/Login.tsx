@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuthStore } from "../../stores/authStore";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const { login, isLoading } = useAuth();
+  const { signIn, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -19,10 +19,10 @@ const Login: React.FC = () => {
     setError("");
 
     try {
-      await login(email, password);
+      await signIn(email, password);
       navigate(from, { replace: true });
-    } catch (err) {
-      setError("Invalid email or password");
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password");
     }
   };
 
@@ -127,16 +127,6 @@ const Login: React.FC = () => {
           >
             Sign up
           </Link>
-        </p>
-      </div>
-
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-900 mb-2">Demo Credentials:</h4>
-        <p className="text-sm text-blue-700">
-          Email:{" "}
-          <code className="bg-blue-100 px-1 rounded">admin@societyhub.com</code>
-          <br />
-          Password: <code className="bg-blue-100 px-1 rounded">password</code>
         </p>
       </div>
     </div>

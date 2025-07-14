@@ -4,8 +4,12 @@ import { createRoot } from "react-dom/client";
 
 import App from "./App.tsx";
 import "./index.css";
-// Create a client
+import { useAuthStore } from "./stores/authStore.ts";
+
 const queryClient = new QueryClient();
+
+// Initialize auth store
+useAuthStore.getState().initialize();
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

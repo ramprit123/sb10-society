@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, Building } from "lucide-react";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuthStore } from "../../stores/authStore";
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -15,7 +15,7 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
-  const { register, isLoading } = useAuth();
+  const { signUp, isLoading } = useAuthStore();
   const navigate = useNavigate();
 
   const handleChange = (
@@ -42,10 +42,13 @@ const Register: React.FC = () => {
     }
 
     try {
-      await register(formData);
+      await signUp(formData.email, formData.password, {
+        name: formData.name,
+        role: formData.role as "super_admin" | "admin" | "manager" | "staff",
+      });
       navigate("/");
-    } catch (err) {
-      setError("Registration failed. Please try again.");
+    } catch (err: any) {
+      setError(err.message || "Registration failed. Please try again.");
     }
   };
 

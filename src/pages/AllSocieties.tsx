@@ -10,46 +10,46 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
-import { useTenant } from "../contexts/TenantContext";
+import { useSocietyStore } from "../stores/societyStore";
 import { useNavigate } from "react-router-dom";
 import AddSocietyModal from "../components/modals/AddSocietyModal";
 
 const AllSocieties: React.FC = () => {
-  const { tenants, deleteTenant } = useTenant();
+  const { societies, deleteSociety } = useSocietyStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [addSocietyOpen, setAddSocietyOpen] = useState(false);
   const navigate = useNavigate();
 
-  const filteredTenants = tenants.filter(
-    (tenant) =>
-      tenant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tenant.address.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTenants = societies.filter(
+    (society) =>
+      society.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      society.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalStats = {
-    totalSocieties: tenants.length,
-    totalUnits: tenants.reduce((sum, tenant) => sum + tenant.totalUnits, 0),
-    totalResidents: tenants.reduce(
-      (sum, tenant) => sum + tenant.totalResidents,
+    totalSocieties: societies.length,
+    totalUnits: societies.reduce((sum, society) => sum + society.totalUnits, 0),
+    totalResidents: societies.reduce(
+      (sum, society) => sum + society.totalResidents,
       0
     ),
-    totalPendingDues: tenants.reduce(
-      (sum, tenant) => sum + tenant.pendingDues,
+    totalPendingDues: societies.reduce(
+      (sum, society) => sum + society.pendingDues,
       0
     ),
   };
 
-  const handleViewSociety = (tenantId: string) => {
-    navigate(`/tenant/${tenantId}/dashboard`);
+  const handleViewSociety = (societyId: string) => {
+    navigate(`/society/${societyId}/dashboard`);
   };
 
-  const handleDeleteSociety = (tenantId: string) => {
+  const handleDeleteSociety = (societyId: string) => {
     if (
       window.confirm(
         "Are you sure you want to delete this society? This action cannot be undone."
       )
     ) {
-      deleteTenant(tenantId);
+      deleteSociety(societyId);
     }
   };
 
@@ -153,32 +153,32 @@ const AllSocieties: React.FC = () => {
 
       {/* Societies Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTenants.map((tenant) => (
+        {filteredTenants.map((society) => (
           <div
-            key={tenant.id}
+            key={society.id}
             className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
           >
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {tenant.name}
+                    {society.name}
                   </h3>
                   <div className="flex items-center text-sm text-gray-500 mt-1">
                     <MapPin className="h-4 w-4 mr-1" />
-                    <span className="truncate">{tenant.address}</span>
+                    <span className="truncate">{society.address}</span>
                   </div>
                 </div>
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    tenant.status === "active"
+                    society.status === "active"
                       ? "bg-green-100 text-green-800"
-                      : tenant.status === "inactive"
+                      : society.status === "inactive"
                       ? "bg-red-100 text-red-800"
                       : "bg-yellow-100 text-yellow-800"
                   }`}
                 >
-                  {tenant.status}
+                  {society.status}
                 </span>
               </div>
 
@@ -186,32 +186,32 @@ const AllSocieties: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-500">Total Units</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {tenant.totalUnits}
+                    {society.totalUnits}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Occupied</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {tenant.occupiedUnits}
+                    {society.occupiedUnits}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Residents</p>
                   <p className="text-lg font-semibold text-gray-900">
-                    {tenant.totalResidents}
+                    {society.totalResidents}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Pending Dues</p>
                   <p className="text-lg font-semibold text-orange-600">
-                    ₹{tenant.pendingDues.toLocaleString()}
+                    ₹{society.pendingDues.toLocaleString()}
                   </p>
                 </div>
               </div>
 
               <div className="flex space-x-2">
                 <button
-                  onClick={() => handleViewSociety(tenant.id)}
+                  onClick={() => handleViewSociety(society.id)}
                   className="flex-1 bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center"
                 >
                   <Eye className="h-4 w-4 mr-2" />
@@ -221,7 +221,7 @@ const AllSocieties: React.FC = () => {
                   <Edit className="h-4 w-4 text-gray-600" />
                 </button>
                 <button
-                  onClick={() => handleDeleteSociety(tenant.id)}
+                  onClick={() => handleDeleteSociety(society.id)}
                   className="px-3 py-2 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   <Trash2 className="h-4 w-4 text-red-600" />
