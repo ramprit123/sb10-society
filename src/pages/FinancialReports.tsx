@@ -1,18 +1,16 @@
-import React, { useState } from "react";
 import {
-  Download,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  PieChart,
-  BarChart3,
-  FileText,
-  Filter,
-  Eye,
   ArrowUpRight,
-  ArrowDownRight,
+  BarChart3,
+  Calendar,
+  DollarSign,
+  Download,
+  Eye,
+  FileText,
+  PieChart,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
+import React, { useState } from "react";
 
 interface FinancialData {
   month: string;
@@ -310,44 +308,67 @@ const FinancialReports: React.FC = () => {
             </h3>
             <BarChart3 className="h-5 w-5 text-gray-400" />
           </div>
-          <div className="h-64 flex items-end justify-between space-x-2">
-            {financialData.map((data, index) => (
-              <div key={index} className="flex flex-col items-center flex-1">
-                <div className="w-full flex flex-col space-y-1">
-                  <div
-                    className="bg-green-500 rounded-t w-full transition-all duration-300 hover:bg-green-600"
-                    style={{
-                      height: `${
-                        (data.income /
-                          Math.max(
-                            ...financialData.map((d) =>
-                              Math.max(d.income, d.expenses)
-                            )
-                          )) *
-                        200
-                      }px`,
-                    }}
-                    title={`Income: ₹${data.income.toLocaleString()}`}
-                  ></div>
-                  <div
-                    className="bg-red-500 rounded-b w-full transition-all duration-300 hover:bg-red-600"
-                    style={{
-                      height: `${
-                        (data.expenses /
-                          Math.max(
-                            ...financialData.map((d) =>
-                              Math.max(d.income, d.expenses)
-                            )
-                          )) *
-                        200
-                      }px`,
-                    }}
-                    title={`Expenses: ₹${data.expenses.toLocaleString()}`}
-                  ></div>
+          <div className="flex items-end justify-between space-x-2">
+            {financialData.map((data, index) => {
+              const maxValue = Math.max(
+                ...financialData.map((d) => Math.max(d.income, d.expenses))
+              );
+              const incomeHeight = (data.income / maxValue) * 180;
+              const expensesHeight = (data.expenses / maxValue) * 180;
+              const diff = data.income - data.expenses;
+              return (
+                <div
+                  key={index}
+                  className="flex flex-col items-center flex-1 group"
+                >
+                  <div className="w-full flex flex-col space-y-1 relative">
+                    {/* Income Bar */}
+                    <div
+                      className="bg-green-500 rounded-t w-full transition-all duration-300 hover:bg-green-600 cursor-pointer"
+                      style={{
+                        height: `${incomeHeight}px`,
+                        zIndex: 2,
+                        position: "relative",
+                      }}
+                      title={`Income: ₹${data.income.toLocaleString()}`}
+                    >
+                      <span className="absolute left-1/2 -top-6 -translate-x-1/2 text-xs text-green-700 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-1 rounded shadow">
+                        ₹{data.income.toLocaleString()}
+                      </span>
+                    </div>
+                    {/* Expenses Bar */}
+                    <div
+                      className="bg-red-500 rounded-b w-full transition-all duration-300 hover:bg-red-600 cursor-pointer"
+                      style={{
+                        height: `${expensesHeight}px`,
+                        marginTop: "2px",
+                        zIndex: 1,
+                        position: "relative",
+                      }}
+                      title={`Expenses: ₹${data.expenses.toLocaleString()}`}
+                    >
+                      <span className="absolute left-1/2 -bottom-6 -translate-x-1/2 text-xs text-red-700 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-1 rounded shadow">
+                        ₹{data.expenses.toLocaleString()}
+                      </span>
+                    </div>
+                    {/* Difference Indicator */}
+                    <div
+                      className={`absolute left-1/2 -translate-x-1/2 text-xs font-semibold ${
+                        diff >= 0 ? "text-green-600" : "text-red-600"
+                      } opacity-0 group-hover:opacity-100 transition-opacity`}
+                      style={{
+                        top: `${Math.min(incomeHeight, expensesHeight) + 10}px`,
+                      }}
+                    >
+                      {diff >= 0 ? "+" : ""}₹{Math.abs(diff).toLocaleString()}
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-600 mt-2">
+                    {data.month}
+                  </span>
                 </div>
-                <span className="text-xs text-gray-600 mt-2">{data.month}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="flex justify-center space-x-6 mt-4">
             <div className="flex items-center">
@@ -370,6 +391,61 @@ const FinancialReports: React.FC = () => {
             <PieChart className="h-5 w-5 text-gray-400" />
           </div>
           <div className="space-y-4">
+            {/* Pie Chart Visualization */}
+            <div className="flex justify-center mb-6">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                {(() => {
+                  let cumulative = 0;
+                  return expenseCategories.map((cat, i) => {
+                    const r = 50;
+                    const cx = 60;
+                    const cy = 60;
+                    const angle = (cat.percentage / 100) * 360;
+                    const startAngle = cumulative;
+                    const endAngle = cumulative + angle;
+                    const largeArc = angle > 180 ? 1 : 0;
+                    const start = {
+                      x: cx + r * Math.cos((Math.PI * startAngle) / 180),
+                      y: cy + r * Math.sin((Math.PI * startAngle) / 180),
+                    };
+                    const end = {
+                      x: cx + r * Math.cos((Math.PI * endAngle) / 180),
+                      y: cy + r * Math.sin((Math.PI * endAngle) / 180),
+                    };
+                    const pathData = `
+              M ${cx} ${cy}
+              L ${start.x} ${start.y}
+              A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}
+              Z
+            `;
+                    cumulative += angle;
+                    // Map tailwind color to hex for SVG
+                    const colorMap: Record<string, string> = {
+                      "bg-blue-500": "#3b82f6",
+                      "bg-green-500": "#22c55e",
+                      "bg-orange-500": "#f97316",
+                      "bg-purple-500": "#a21caf",
+                      "bg-gray-500": "#6b7280",
+                    };
+                    return (
+                      <path
+                        key={i}
+                        d={pathData}
+                        fill={colorMap[cat.color] || "#ccc"}
+                        stroke="#fff"
+                        strokeWidth="2"
+                      >
+                        <title>
+                          {cat.category}: {cat.percentage}% (₹
+                          {cat.amount.toLocaleString()})
+                        </title>
+                      </path>
+                    );
+                  });
+                })()}
+              </svg>
+            </div>
+            {/* Category List */}
             {expenseCategories.map((category, index) => (
               <div key={index} className="flex items-center justify-between">
                 <div className="flex items-center flex-1">

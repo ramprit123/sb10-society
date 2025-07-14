@@ -96,33 +96,29 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
     try {
       set({ isLoading: true });
 
-      // Fetch societies from Supabase
-      const { data, error } = await supabase
-        .from("societies")
-        .select("*")
-        .order("name");
-
+      const { data, error } = await supabase.from("societies").select("*");
       if (error) {
         throw error;
       }
 
       // Transform the data to match our interface
-      const societies: Society[] = data.map((society) => ({
-        id: society.id,
-        name: society.name,
-        address: society.address,
-        totalUnits: society.total_units,
-        occupiedUnits: society.occupied_units,
-        totalResidents: society.total_residents,
-        pendingDues: society.pending_dues,
-        status: society.status,
-        logo: society.logo,
-        settings: {
-          currency: society.settings.currency,
-          timezone: society.settings.timezone,
-          maintenanceDay: society.settings.maintenance_day,
-        },
-      }));
+      const societies: Society[] =
+        data?.map((society) => ({
+          id: society.id,
+          name: society.name,
+          address: society.address,
+          totalUnits: society.total_units,
+          occupiedUnits: society.occupied_units,
+          totalResidents: society.total_residents,
+          pendingDues: society.pending_dues,
+          status: society.status,
+          logo: society.logo,
+          settings: {
+            currency: society.settings?.currency || "INR",
+            timezone: society.settings?.timezone || "Asia/Kolkata",
+            maintenanceDay: society.settings?.maintenance_day || 5,
+          },
+        })) || [];
 
       set({
         societies,
@@ -141,7 +137,7 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
       console.error("Error fetching societies:", error);
 
       // Fallback to mock data if Supabase fails
-      console.warn("Falling back to mock data");
+      console.warn("Falling back to mock data due to error:", error);
       set({
         societies: mockSocieties,
         isLoading: false,
@@ -181,7 +177,6 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
 
       // Transform data to match database schema
       const dbData = {
-        id: `society-${Date.now()}`, // Generate unique ID
         name: societyData.name,
         address: societyData.address,
         total_units: societyData.totalUnits,

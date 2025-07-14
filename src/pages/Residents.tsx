@@ -1,19 +1,17 @@
-import React, { useState } from "react";
 import {
+  Calendar,
+  Edit,
+  Home,
+  Mail,
+  MoreVertical,
+  Phone,
   Plus,
   Search,
-  Filter,
-  Edit,
   Trash2,
-  Phone,
-  Mail,
-  Home,
   User,
-  Calendar,
-  Car,
-  MoreVertical,
 } from "lucide-react";
-import AddResidentModal from "../components/modals/AddResidentModal";
+import React, { useState } from "react";
+import AddResidentModal from "@/components/modals/AddResidentModal";
 
 interface Resident {
   id: string;
@@ -292,7 +290,7 @@ const Residents: React.FC = () => {
                           "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150"
                         }
                         alt={`${resident.firstName} ${resident.lastName}`}
-                        className="h-10 w-10 rounded-full mr-3"
+                        className="h-10 w-10 rounded-full mr-3 object-cover"
                       />
                       <div>
                         <div className="font-medium text-gray-900">

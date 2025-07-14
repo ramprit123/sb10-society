@@ -56,7 +56,6 @@ const DashboardLayout: React.FC = () => {
   } = useSocietyStore();
   const navigate = useNavigate();
   const location = useLocation();
-
   // Fetch societies when component mounts
   useEffect(() => {
     if (societies.length === 0) {
@@ -253,10 +252,7 @@ const DashboardLayout: React.FC = () => {
     .map((category) => ({
       ...category,
       items: category.items.filter((item) => {
-        // Check role permissions
         if (!hasPermission(item)) return false;
-
-        // Check global/tenant context
         if (item.globalOnly && !isGlobalView) return false;
         if (item.tenantOnly && (isGlobalView || !currentSociety)) return false;
 
@@ -272,7 +268,7 @@ const DashboardLayout: React.FC = () => {
         <div className="flex items-center">
           <Building2 className="h-8 w-8 text-purple-600" />
           <span className="ml-2 text-xl font-bold text-gray-900">
-            SocietyHub
+            Society Connect
           </span>
         </div>
         <button
@@ -426,14 +422,6 @@ const DashboardLayout: React.FC = () => {
       {/* User Info & Logout */}
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center mb-3">
-          <img
-            src={
-              profile?.avatar ||
-              "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150"
-            }
-            alt="Profile"
-            className="h-8 w-8 rounded-full"
-          />
           <div className="ml-3">
             <div className="text-sm font-medium text-gray-900">
               {profile?.name}
