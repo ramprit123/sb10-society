@@ -46,7 +46,8 @@ const TenantRoute: React.FC = () => {
   const hasAccess = React.useMemo(() => {
     if (!profile || !tenantId || !targetSociety) return false;
     return (
-      profile.tenants.includes(tenantId) || profile.role === TenantRole.ADMIN
+      profile.tenants.includes(tenantId) ||
+      profile.global_role === TenantRole.ADMIN
     );
   }, [profile, tenantId, targetSociety]);
 

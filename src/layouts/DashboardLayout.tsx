@@ -245,7 +245,7 @@ const DashboardLayout: React.FC = () => {
 
   const hasPermission = (item: NavigationItem) => {
     if (!item.roles) return true;
-    return item.roles.includes(profile?.role || "");
+    return item.roles.includes(profile?.global_role || "");
   };
 
   const filteredNavigationItems = navigationItems
@@ -427,7 +427,7 @@ const DashboardLayout: React.FC = () => {
               {profile?.name}
             </div>
             <div className="text-xs text-gray-500 capitalize">
-              {profile?.role.replace("_", " ")}
+              {profile?.global_role.replace("_", " ")}
             </div>
           </div>
         </div>

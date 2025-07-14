@@ -1,14 +1,15 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
-import { supabase } from "../lib/supabase";
+import { supabase } from "@/lib/supabase";
 
 interface UserProfile {
   id: string;
   email: string;
   name: string;
-  role: "super_admin" | "admin" | "manager" | "staff";
-  tenants: string[];
+  global_role?: "super_admin" | "platform_admin";
+  default_society_id?: string;
   avatar?: string;
+  phone?: string;
 }
 
 interface AuthState {
@@ -31,6 +32,7 @@ interface AuthState {
     userId: string,
     userData: Partial<UserProfile>
   ) => Promise<UserProfile>;
+  checkProfileTrigger: () => Promise<boolean>;
   initialize: () => void;
 }
 
@@ -76,7 +78,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         options: {
           data: {
             name: userData.name || "",
-            role: userData.role || "staff",
+            global_role: userData.global_role || null,
+            default_society_id: userData.default_society_id || null,
+            avatar: userData.avatar || null,
+            phone: userData.phone || null,
           },
         },
       });
@@ -86,38 +91,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         throw error;
       }
 
-      if (data.user) {
-        // Create user profile in the database
-        const profileData: UserProfile = {
-          id: data.user.id,
-          email: data.user.email!,
-          name: userData.name || "",
-          role:
-            userData.role ||
-            ("staff" as "super_admin" | "admin" | "manager" | "staff"),
-          tenants: userData.tenants || [],
-          avatar: userData.avatar,
-        };
+      // If user is created immediately (email confirmation disabled)
+      if (data.user && data.session) {
+        // Wait a moment for the database trigger to create the profile
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        const { error: profileError } = await supabase
+        // Verify profile was created by the trigger
+        const { data: profile, error: profileError } = await supabase
           .from("profiles")
-          .insert(profileData);
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
 
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-          set({ isLoading: false });
-          throw new Error(`Profile creation failed: ${profileError.message}`);
+        if (profileError && profileError.code === "PGRST116") {
+          // Profile doesn't exist, create it manually as fallback
+          console.warn(
+            "Database trigger didn't create profile, creating manually"
+          );
+          await get().createProfile(data.user.id, userData);
+        } else if (profileError) {
+          console.error("Error checking profile:", profileError);
+        } else {
+          // Profile exists, update store
+          set({ profile });
         }
-
-        // Set the profile in state immediately if creation was successful
-        set({
-          profile: profileData,
-          isAuthenticated: true,
-          isLoading: false,
-        });
-      } else {
-        set({ isLoading: false });
       }
+
+      // Profile will be created automatically by database trigger
+      // Auth state change listener will handle setting user, session, and isAuthenticated
+      set({ isLoading: false });
     } catch (error) {
       set({ isLoading: false });
       throw error;
@@ -176,13 +178,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: true });
       const { user } = get();
 
-      const profileData: UserProfile = {
+      const profileData = {
         id: userId,
         email: user?.email || userData.email || "",
         name: userData.name || "",
-        role: userData.role || "staff",
-        tenants: userData.tenants || [],
+        global_role: userData.global_role || undefined,
+        default_society_id: userData.default_society_id || undefined,
         avatar: userData.avatar,
+        phone: userData.phone,
       };
 
       const { data, error } = await supabase
@@ -197,12 +200,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
 
       // Update the store with the new profile
-      set({ profile: data, isLoading: false });
-      return data;
+      set({ profile: data as UserProfile, isLoading: false });
+      return data as UserProfile;
     } catch (error) {
       console.error("Error creating profile:", error);
       set({ isLoading: false });
       throw error;
+    }
+  },
+
+  // Utility function to check if profile creation trigger is working
+  checkProfileTrigger: async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.rpc("check_trigger_exists", {
+        trigger_name: "on_auth_user_created",
+      });
+
+      if (error) {
+        console.warn("Could not check trigger status:", error);
+        return false;
+      }
+
+      return data || false;
+    } catch (error) {
+      console.warn("Could not check trigger status:", error);
+      return false;
     }
   },
 
@@ -216,19 +238,58 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: true,
         });
 
-        // Fetch user profile
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single()
-          .then(({ data: profile, error }) => {
+        // Fetch user profile with retry logic
+        const fetchProfile = async (retries = 3) => {
+          for (let i = 0; i < retries; i++) {
+            const { data: profile, error } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+
             if (error) {
-              console.error("Error fetching profile:", error);
+              if (error.code === "PGRST116" && i === retries - 1) {
+                // Profile doesn't exist after all retries, create it manually
+                console.warn(
+                  "Profile not found after retries, creating manually"
+                );
+                try {
+                  const newProfile = await get().createProfile(
+                    session.user.id,
+                    {
+                      email: session.user.email || "",
+                      name:
+                        session.user.user_metadata?.name ||
+                        session.user.email?.split("@")[0] ||
+                        "",
+                    }
+                  );
+                  set({ profile: newProfile });
+                } catch (createError) {
+                  console.error(
+                    "Error creating profile manually:",
+                    createError
+                  );
+                }
+                break;
+              } else if (error.code === "PGRST116" && i < retries - 1) {
+                // Profile doesn't exist yet, wait and retry
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 1000 * (i + 1))
+                );
+                continue;
+              } else {
+                console.error("Error fetching profile:", error);
+                break;
+              }
             } else {
               set({ profile });
+              break;
             }
-          });
+          }
+        };
+
+        fetchProfile();
       }
     });
 
@@ -242,19 +303,58 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isLoading: false,
         });
 
-        // Fetch user profile
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .single()
-          .then(({ data: profile, error }) => {
+        // Fetch user profile with retry logic for new sign-ins
+        const fetchProfile = async (retries = 3) => {
+          for (let i = 0; i < retries; i++) {
+            const { data: profile, error } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("id", session.user.id)
+              .single();
+
             if (error) {
-              console.error("Error fetching profile:", error);
+              if (error.code === "PGRST116" && i === retries - 1) {
+                // Profile doesn't exist after all retries, create it manually
+                console.warn(
+                  "Profile not found after retries, creating manually"
+                );
+                try {
+                  const newProfile = await get().createProfile(
+                    session.user.id,
+                    {
+                      email: session.user.email || "",
+                      name:
+                        session.user.user_metadata?.name ||
+                        session.user.email?.split("@")[0] ||
+                        "",
+                    }
+                  );
+                  set({ profile: newProfile });
+                } catch (createError) {
+                  console.error(
+                    "Error creating profile manually:",
+                    createError
+                  );
+                }
+                break;
+              } else if (error.code === "PGRST116" && i < retries - 1) {
+                // Profile doesn't exist yet, wait and retry
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 1000 * (i + 1))
+                );
+                continue;
+              } else {
+                console.error("Error fetching profile:", error);
+                break;
+              }
             } else {
               set({ profile });
+              break;
             }
-          });
+          }
+        };
+
+        fetchProfile();
       } else if (event === "SIGNED_OUT") {
         set({
           user: null,

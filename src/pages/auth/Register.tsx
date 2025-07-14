@@ -1,7 +1,7 @@
+import { useAuthStore } from "@/stores/authStore";
+import { Building, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, User, Building } from "lucide-react";
-import { useAuthStore } from "../../stores/authStore";
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -9,8 +9,9 @@ const Register: React.FC = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "admin",
-    companyName: "",
+    global_role: "platform_admin",
+    default_society_id: "society-1",
+    companyName: "society-1",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -44,7 +45,8 @@ const Register: React.FC = () => {
     try {
       await signUp(formData.email, formData.password, {
         name: formData.name,
-        role: formData.role as "super_admin" | "admin" | "manager" | "staff",
+        global_role: formData.global_role as "super_admin" | "platform_admin",
+        default_society_id: formData.default_society_id,
       });
       navigate("/");
     } catch (err: any) {
@@ -119,14 +121,13 @@ const Register: React.FC = () => {
           </label>
           <select
             id="role"
-            name="role"
-            value={formData.role}
+            name="global_role"
+            value={formData.global_role}
             onChange={handleChange}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
             required
           >
-            <option value="admin">Society Admin</option>
-            <option value="manager">Property Manager</option>
+            <option value="platform_admin">Platform Admin</option>
             <option value="super_admin">Super Admin</option>
           </select>
         </div>
