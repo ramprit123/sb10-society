@@ -56,12 +56,56 @@ const DashboardLayout: React.FC = () => {
   } = useSocietyStore();
   const navigate = useNavigate();
   const location = useLocation();
+
   // Fetch societies when component mounts
   useEffect(() => {
     if (societies.length === 0) {
       fetchSocieties();
     }
   }, [societies.length, fetchSocieties]);
+
+  // Handle URL-based society selection on page reload or navigation
+  useEffect(() => {
+    const urlPath = location.pathname;
+    const tenantMatch = urlPath.match(/^\/tenant\/([^\/]+)/);
+
+    if (tenantMatch) {
+      const societyIdFromUrl = tenantMatch[1];
+
+      // Only switch if we have societies loaded and the current society doesn't match
+      if (societies.length > 0) {
+        const targetSociety = societies.find((s) => s.id === societyIdFromUrl);
+
+        if (targetSociety) {
+          // If we're in global view or have a different society selected
+          if (isGlobalView || currentSociety?.id !== societyIdFromUrl) {
+            setGlobalView(false);
+            switchSociety(societyIdFromUrl);
+          }
+        } else {
+          // Society not found, redirect to global view
+          console.warn(
+            `Society ${societyIdFromUrl} not found, redirecting to global view`
+          );
+          setGlobalView(true);
+          navigate("/");
+        }
+      }
+    } else if (urlPath === "/" || urlPath === "") {
+      // Root path should show global view
+      if (!isGlobalView) {
+        setGlobalView(true);
+      }
+    }
+  }, [
+    location.pathname,
+    societies,
+    currentSociety?.id,
+    isGlobalView,
+    switchSociety,
+    setGlobalView,
+    navigate,
+  ]);
 
   const navigationItems: { category: string; items: NavigationItem[] }[] = [
     {
@@ -427,7 +471,7 @@ const DashboardLayout: React.FC = () => {
               {profile?.name}
             </div>
             <div className="text-xs text-gray-500 capitalize">
-              {profile?.global_role.replace("_", " ")}
+              {profile?.global_role?.replace("_", " ")}
             </div>
           </div>
         </div>

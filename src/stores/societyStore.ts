@@ -90,7 +90,7 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
   currentSociety: null,
   societies: [],
   isLoading: false,
-  isGlobalView: true,
+  isGlobalView: JSON.parse(localStorage.getItem("isGlobalView") || "true"),
 
   fetchSocieties: async () => {
     try {
@@ -168,6 +168,7 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
     const society = societies.find((s) => s.id === societyId);
     if (society) {
       get().setCurrentSociety(society);
+      get().setGlobalView(false);
     }
   },
 
@@ -342,5 +343,12 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
 
   setGlobalView: (global: boolean) => {
     set({ isGlobalView: global });
+    localStorage.setItem("isGlobalView", JSON.stringify(global));
+
+    // If switching to global view, clear current society
+    if (global) {
+      set({ currentSociety: null });
+      localStorage.removeItem("currentSociety");
+    }
   },
 }));

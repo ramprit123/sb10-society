@@ -14,7 +14,6 @@ interface TenantRouteState {
 }
 
 enum TenantRole {
-  ADMIN = "admin",
   SUPER_ADMIN = "super_admin",
   MANAGER = "manager",
 }
@@ -45,10 +44,7 @@ const TenantRoute: React.FC = () => {
   // Check if user has access to the society
   const hasAccess = React.useMemo(() => {
     if (!profile || !tenantId || !targetSociety) return false;
-    return (
-      profile.tenants.includes(tenantId) ||
-      profile.global_role === TenantRole.ADMIN
-    );
+    return profile.global_role === TenantRole.SUPER_ADMIN;
   }, [profile, tenantId, targetSociety]);
 
   // Handle society switching
@@ -90,21 +86,23 @@ const TenantRoute: React.FC = () => {
     initializeSocieties();
   }, [societies.length, fetchSocieties]);
 
-  // Handle society switching when dependencies change
   useEffect(() => {
-    if (!state.isInitializing && tenantId && targetSociety && hasAccess) {
-      // Only switch if we're not already on the correct society
-      if (!currentSociety || currentSociety.id !== tenantId) {
-        handleSocietySwitch();
-      } else {
-        setState((prev) => ({ ...prev, hasAccess: true }));
+    const timeout = setTimeout(() => {
+      if (!state.isInitializing && tenantId && targetSociety && hasAccess) {
+        if (!currentSociety || currentSociety.id !== tenantId) {
+          handleSocietySwitch();
+        } else {
+          setState((prev) => ({ ...prev, hasAccess: true }));
+        }
+      } else if (!state.isInitializing && tenantId && !hasAccess) {
+        setState((prev) => ({
+          ...prev,
+          error: "You do not have access to this society.",
+        }));
       }
-    } else if (!state.isInitializing && tenantId && !hasAccess) {
-      setState((prev) => ({
-        ...prev,
-        error: "You do not have access to this society.",
-      }));
-    }
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timeout);
   }, [
     state.isInitializing,
     tenantId,
@@ -134,7 +132,25 @@ const TenantRoute: React.FC = () => {
     );
   }
 
-  // Redirect if no tenantId or profile
+  if (authLoading || societiesLoading || state.isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="space-y-4 w-full max-w-md">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          </div>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-3/4 mx-auto" />
+            <Skeleton className="h-4 w-1/2 mx-auto" />
+          </div>
+          <p className="text-center text-sm text-gray-500">
+            Loading society information...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (!tenantId || !profile) {
     return <Navigate to="/" replace />;
   }
