@@ -22,6 +22,7 @@ import {
   TrendingUp,
   UserCog,
   Users,
+  Vote,
   X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -198,6 +199,13 @@ const DashboardLayout: React.FC = () => {
           name: "Announcements",
           icon: Megaphone,
           path: `/tenant/${currentSociety?.id}/announcements`,
+          tenantOnly: true,
+          roles: ["super_admin", "admin", "manager"],
+        },
+        {
+          name: "Polls & Surveys",
+          icon: Vote,
+          path: `/tenant/${currentSociety?.id}/polls-surveys`,
           tenantOnly: true,
           roles: ["super_admin", "admin", "manager"],
         },

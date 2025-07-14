@@ -22,6 +22,7 @@ import FinancialReports from "./pages/FinancialReports";
 import MaintenanceBills from "./pages/MaintenanceBills";
 import Meetings from "./pages/Meetings";
 import Payments from "./pages/Payments";
+import PollsSurveys from "./pages/PollsSurveys";
 import Residents from "./pages/Residents";
 import Security from "./pages/Security";
 import Settings from "./pages/Settings";
@@ -69,6 +70,7 @@ function App() {
             <Route path="access-control" element={<AccessControl />} />
             <Route path="events" element={<EventsNotices />} />
             <Route path="announcements" element={<Announcements />} />
+            <Route path="polls-surveys" element={<PollsSurveys />} />
             <Route path="meetings" element={<Meetings />} />
             <Route path="settings" element={<Settings />} />
             <Route path="user-management" element={<UserManagement />} />
