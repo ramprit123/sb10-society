@@ -87,12 +87,192 @@ export type Database = {
           };
         };
       };
+      polls_surveys: {
+        Row: {
+          id: string;
+          society_id: string;
+          title: string;
+          description: string;
+          type: "poll" | "survey";
+          status: "draft" | "active" | "closed";
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+          end_date: string;
+          target_audience: "all" | "owners" | "tenants" | "specific";
+          target_groups?: string[];
+          settings?: any;
+        };
+        Insert: {
+          society_id: string;
+          title: string;
+          description: string;
+          type: "poll" | "survey";
+          status?: "draft" | "active" | "closed";
+          created_by: string;
+          end_date: string;
+          target_audience?: "all" | "owners" | "tenants" | "specific";
+          target_groups?: string[];
+          settings?: any;
+        };
+        Update: {
+          title?: string;
+          description?: string;
+          type?: "poll" | "survey";
+          status?: "draft" | "active" | "closed";
+          end_date?: string;
+          target_audience?: "all" | "owners" | "tenants" | "specific";
+          target_groups?: string[];
+          settings?: any;
+        };
+      };
+      poll_options: {
+        Row: {
+          id: string;
+          poll_id: string;
+          option_text: string;
+          option_order: number;
+          created_at: string;
+        };
+        Insert: {
+          poll_id: string;
+          option_text: string;
+          option_order: number;
+        };
+        Update: {
+          option_text?: string;
+          option_order?: number;
+        };
+      };
+      survey_questions: {
+        Row: {
+          id: string;
+          poll_id: string;
+          question_text: string;
+          question_type:
+            | "single_choice"
+            | "multiple_choice"
+            | "text"
+            | "rating"
+            | "scale";
+          question_order: number;
+          required: boolean;
+          options?: string[];
+          settings?: any;
+          created_at: string;
+        };
+        Insert: {
+          poll_id: string;
+          question_text: string;
+          question_type:
+            | "single_choice"
+            | "multiple_choice"
+            | "text"
+            | "rating"
+            | "scale";
+          question_order: number;
+          required?: boolean;
+          options?: string[];
+          settings?: any;
+        };
+        Update: {
+          question_text?: string;
+          question_type?:
+            | "single_choice"
+            | "multiple_choice"
+            | "text"
+            | "rating"
+            | "scale";
+          question_order?: number;
+          required?: boolean;
+          options?: string[];
+          settings?: any;
+        };
+      };
+      poll_responses: {
+        Row: {
+          id: string;
+          poll_id: string;
+          option_id: string;
+          resident_id: string;
+          responded_at: string;
+        };
+        Insert: {
+          poll_id: string;
+          option_id: string;
+          resident_id: string;
+        };
+        Update: {
+          option_id?: string;
+        };
+      };
+      survey_responses: {
+        Row: {
+          id: string;
+          poll_id: string;
+          question_id: string;
+          resident_id: string;
+          response_text?: string;
+          selected_options?: string[];
+          rating?: number;
+          responded_at: string;
+        };
+        Insert: {
+          poll_id: string;
+          question_id: string;
+          resident_id: string;
+          response_text?: string;
+          selected_options?: string[];
+          rating?: number;
+        };
+        Update: {
+          response_text?: string;
+          selected_options?: string[];
+          rating?: number;
+        };
+      };
+      poll_survey_participants: {
+        Row: {
+          id: string;
+          poll_id: string;
+          resident_id: string;
+          completed: boolean;
+          started_at: string;
+          completed_at?: string;
+        };
+        Insert: {
+          poll_id: string;
+          resident_id: string;
+          completed?: boolean;
+        };
+        Update: {
+          completed?: boolean;
+          completed_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      get_poll_results: {
+        Args: {
+          poll_uuid: string;
+        };
+        Returns: {
+          option_id: string;
+          option_text: string;
+          vote_count: number;
+          percentage: number;
+        }[];
+      };
+      can_user_vote: {
+        Args: {
+          poll_uuid: string;
+          user_uuid: string;
+        };
+        Returns: boolean;
+      };
     };
     Enums: {
       [_ in never]: never;
