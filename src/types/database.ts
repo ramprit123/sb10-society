@@ -148,6 +148,7 @@ export interface Database {
           resident_category: "home" | "shop" | "office" | "other";
           emergency_contact?: string;
           avatar?: string;
+          owner_id?: string; // For tenants to link to their owner
           created_at: string;
           updated_at: string;
         };
@@ -165,6 +166,7 @@ export interface Database {
           resident_category?: "home" | "shop" | "office" | "other";
           emergency_contact?: string;
           avatar?: string;
+          owner_id?: string; // For tenants to link to their owner
         };
         Update: {
           society_id?: string;
@@ -180,6 +182,7 @@ export interface Database {
           resident_category?: "home" | "shop" | "office" | "other";
           emergency_contact?: string;
           avatar?: string;
+          owner_id?: string; // For tenants to link to their owner
         };
       };
       units: {

@@ -1,5 +1,25 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  User,
+  UserCheck,
+  Mail,
+  Phone,
+  Home,
+  Calendar,
+  Shield,
+  AlertCircle,
+  Camera,
+  ImageIcon,
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useUpdateResident, useOwners } from "@/services/residentsService";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +35,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,24 +42,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTenant } from "@/contexts/TenantContext";
-import { supabase } from "@/lib/supabase";
-import { useCreateResident, useOwners } from "@/services/residentsService";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Calendar,
-  Camera,
-  Home,
-  ImageIcon,
-  Mail,
-  Phone,
-  User,
-  UserCheck,
-} from "lucide-react";
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const formSchema = z
   .object({
@@ -91,46 +95,67 @@ const formSchema = z
     }
   );
 
-interface AddResidentModalProps {
+interface EditResidentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editingResident?: any;
+  resident: any;
 }
 
-const AddResidentModal: React.FC<AddResidentModalProps> = ({
+const EditResidentModal: React.FC<EditResidentModalProps> = ({
   isOpen,
   onClose,
-  editingResident,
+  resident,
 }) => {
   const { currentTenant } = useTenant();
   const societyId = currentTenant?.id || "society-1";
-  const createResident = useCreateResident(societyId);
+  const updateResident = useUpdateResident(societyId);
   const { data: owners = [] } = useOwners(societyId);
 
   const [uploading, setUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(
-    editingResident?.avatar
+    resident?.avatar
   );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      first_name: editingResident?.first_name || "",
-      last_name: editingResident?.last_name || "",
-      email: editingResident?.email || "",
-      phone: editingResident?.phone || "",
-      flat_number: editingResident?.flat_number || "",
-      move_in_date: editingResident?.move_in_date || "",
-      emergency_contact: editingResident?.emergency_contact || "",
-      type: editingResident?.type || "owner",
-      status: editingResident?.status || "active",
-      resident_category: editingResident?.resident_category || "home",
-      owner_id: editingResident?.owner_id,
-      avatar: editingResident?.avatar || "",
+      first_name: "",
+      last_name: "",
+      email: "",
+      phone: "",
+      flat_number: "",
+      move_in_date: "",
+      emergency_contact: "",
+      type: "owner",
+      status: "active",
+      resident_category: "home",
+      owner_id: "",
+      avatar: "",
     },
   });
 
   const watchedType = form.watch("type");
+
+  // Update form when resident changes
+  useEffect(() => {
+    if (resident) {
+      form.reset({
+        first_name: resident.first_name || "",
+        last_name: resident.last_name || "",
+        email: resident.email || "",
+        phone: resident.phone || "",
+        flat_number: resident.flat_number || "",
+        move_in_date: resident.move_in_date || "",
+        emergency_contact: resident.emergency_contact || "",
+        type: resident.type || "owner",
+        status: resident.status || "active",
+        resident_category: resident.resident_category || "home",
+        owner_id: resident.owner_id,
+        avatar: resident.avatar || "",
+      });
+      setAvatarUrl(resident.avatar);
+    }
+  }, [resident, form]);
 
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -173,42 +198,47 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await createResident.mutateAsync({
-        ...values,
-        society_id: societyId,
-        avatar: avatarUrl,
+      await updateResident.mutateAsync({
+        id: resident.id,
+        updates: {
+          ...values,
+          avatar: avatarUrl,
+        },
       });
 
-      toast.success("Resident added successfully!");
+      toast.success("Resident updated successfully!");
       onClose();
-      form.reset();
-      setAvatarUrl(undefined);
     } catch (error) {
-      toast.error("Failed to add resident. Please try again.");
+      toast.error("Failed to update resident. Please try again.");
     }
   };
 
-  const handleClose = () => {
-    form.reset();
-    setAvatarUrl(undefined);
-    onClose();
-  };
+  if (!resident) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            {editingResident ? "Edit Resident" : "Add New Resident"}
+            Edit Resident
           </DialogTitle>
-        </DialogHeader>{" "}
+        </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Avatar Upload - Enhanced Modern UI */}
             <div className="flex flex-col items-center space-y-6 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-200 hover:border-purple-300 transition-all duration-300">
               <div className="relative group">
-                <Avatar className="w-32 h-32 border-4 border-white shadow-lg">
+                <Avatar
+                  className="w-32 h-32 border-4 border-white shadow-lg cursor-pointer"
+                  onClick={() =>
+                    document.getElementById("avatar-upload")?.click()
+                  }
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Upload avatar"
+                >
                   <AvatarImage
                     src={avatarUrl}
                     alt="Resident avatar"
@@ -220,7 +250,7 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
                 </Avatar>
 
                 {/* Upload overlay */}
-                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                   <Camera className="h-8 w-8 text-white" />
                 </div>
               </div>
@@ -231,34 +261,34 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
                   accept="image/*"
                   onChange={handleImageUpload}
                   disabled={uploading}
-                  style={{ display: "none" }}
                   className="hidden"
+                  style={{ display: "none" }}
                   id="avatar-upload"
+                  tabIndex={-1}
+                  aria-hidden="true"
                 />
-                <label htmlFor="avatar-upload" className="cursor-pointer">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="lg"
-                    disabled={uploading}
-                    onClick={() =>
-                      document.getElementById("avatar-upload")?.click()
-                    }
-                    className="bg-white hover:bg-purple-50 border-purple-200 hover:border-purple-300 text-purple-700 font-medium px-6 py-3 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
-                  >
-                    {uploading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-3"></div>
-                        Uploading...
-                      </>
-                    ) : (
-                      <>
-                        <ImageIcon className="h-5 w-5 mr-2" />
-                        Upload Photo
-                      </>
-                    )}
-                  </Button>
-                </label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  disabled={uploading}
+                  className="bg-white hover:bg-purple-50 border-purple-200 hover:border-purple-300 text-purple-700 font-medium px-6 py-3 rounded-xl transition-all duration-300 shadow-sm hover:shadow-md"
+                  onClick={() =>
+                    document.getElementById("avatar-upload")?.click()
+                  }
+                >
+                  {uploading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-3"></div>
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="h-5 w-5 mr-2" />
+                      {avatarUrl ? "Change Photo" : "Upload Photo"}
+                    </>
+                  )}
+                </Button>
                 <p className="text-xs text-gray-500 text-center">
                   PNG, JPG, GIF up to 5MB
                 </p>
@@ -446,10 +476,7 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
                     <FormLabel className="flex items-center gap-2 text-gray-700 font-medium">
                       Resident Type
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="border-gray-300 focus:border-purple-500 focus:ring-purple-500">
                           <SelectValue placeholder="Select type" />
@@ -473,10 +500,7 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
                     <FormLabel className="flex items-center gap-2 text-gray-700 font-medium">
                       Status
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="border-gray-300 focus:border-purple-500 focus:ring-purple-500">
                           <SelectValue placeholder="Select status" />
@@ -501,10 +525,7 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
                     <FormLabel className="flex items-center gap-2 text-gray-700 font-medium">
                       Category
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger className="border-gray-300 focus:border-purple-500 focus:ring-purple-500">
                           <SelectValue placeholder="Select category" />
@@ -538,7 +559,7 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
                       </FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger className="border-blue-300 focus:border-blue-500 focus:ring-blue-500 bg-white">
@@ -579,23 +600,23 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleClose}
+                onClick={onClose}
                 className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={createResident.isPending}
+                disabled={updateResident.isPending}
                 className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
               >
-                {createResident.isPending ? (
+                {updateResident.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Adding...
+                    Updating...
                   </>
                 ) : (
-                  "Add Resident"
+                  "Update Resident"
                 )}
               </Button>
             </div>
@@ -606,4 +627,4 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
   );
 };
 
-export default AddResidentModal;
+export default EditResidentModal;

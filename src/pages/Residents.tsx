@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import AddResidentModal from "@/components/modals/AddResidentModal";
+import EditResidentModal from "@/components/modals/EditResidentModal";
 import VehicleManagement from "@/components/VehicleManagement";
 import { useResidents, useDeleteResident } from "@/services/residentsService";
 import { useTenant } from "@/contexts/TenantContext";
@@ -31,6 +32,7 @@ const Residents: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [addResidentOpen, setAddResidentOpen] = useState(false);
+  const [editResidentOpen, setEditResidentOpen] = useState(false);
   const [vehicleManagementOpen, setVehicleManagementOpen] = useState(false);
   const [selectedResident, setSelectedResident] = useState<any>(null);
 
@@ -55,6 +57,12 @@ const Residents: React.FC = () => {
   const handleManageVehicles = (resident: any) => {
     setSelectedResident(resident);
     setVehicleManagementOpen(true);
+  };
+
+  // Function to open edit resident modal
+  const handleEditResident = (resident: any) => {
+    setSelectedResident(resident);
+    setEditResidentOpen(true);
   };
 
   const filteredResidents = residents.filter((resident) => {
@@ -292,6 +300,12 @@ const Residents: React.FC = () => {
                         <div className="text-sm text-gray-500">
                           {resident.email}
                         </div>
+                        {resident.type === "tenant" && resident.owner && (
+                          <div className="text-xs text-blue-600 mt-1">
+                            Linked to: {resident.owner.first_name}{" "}
+                            {resident.owner.last_name}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -378,7 +392,10 @@ const Residents: React.FC = () => {
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-2">
-                      <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                      <button
+                        onClick={() => handleEditResident(resident)}
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                      >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button
@@ -418,6 +435,15 @@ const Residents: React.FC = () => {
       <AddResidentModal
         isOpen={addResidentOpen}
         onClose={() => setAddResidentOpen(false)}
+      />
+
+      <EditResidentModal
+        isOpen={editResidentOpen}
+        onClose={() => {
+          setEditResidentOpen(false);
+          setSelectedResident(null);
+        }}
+        resident={selectedResident}
       />
 
       {selectedResident && (

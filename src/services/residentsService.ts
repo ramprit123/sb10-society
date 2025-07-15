@@ -13,17 +13,20 @@ export const RESIDENTS_KEYS = {
   byId: (id: string) => ["residents", id] as const,
 };
 
-// Fetch all residents for a society with their vehicles
+// Fetch all residents for a society with their vehicles and owner information
 export const useResidents = (societyId: string) => {
   return useQuery({
     queryKey: RESIDENTS_KEYS.bySociety(societyId),
-    queryFn: async (): Promise<(ResidentRow & { vehicles: any[] })[]> => {
+    queryFn: async (): Promise<
+      (ResidentRow & { vehicles: any[]; owner?: ResidentRow })[]
+    > => {
       const { data, error } = await supabase
         .from("residents")
         .select(
           `
           *,
-          vehicles:vehicles(*)
+          vehicles:vehicles(*),
+          owner:owner_id(*)
         `
         )
         .eq("society_id", societyId)
@@ -162,4 +165,37 @@ export const createResidents = async (
   }
 
   return data || [];
+};
+
+// Type for owner dropdown options
+type OwnerOption = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  flat_number: string;
+  email: string;
+};
+
+// Fetch all owners for a society (for tenant-owner relationship)
+export const useOwners = (societyId: string) => {
+  return useQuery({
+    queryKey: [...RESIDENTS_KEYS.bySociety(societyId), "owners"],
+    queryFn: async (): Promise<OwnerOption[]> => {
+      const { data, error } = await supabase
+        .from("residents")
+        .select("id, first_name, last_name, flat_number, email")
+        .eq("society_id", societyId)
+        .eq("type", "owner")
+        .eq("status", "active")
+        .order("first_name", { ascending: true });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 };
