@@ -189,6 +189,82 @@ export type Database = {
           settings?: any;
         };
       };
+      residents: {
+        Row: {
+          id: string;
+          society_id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone: string;
+          flat_number: string;
+          move_in_date: string;
+          status: "active" | "inactive" | "pending";
+          type: "owner" | "tenant";
+          emergency_contact: string;
+          avatar?: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          society_id: string;
+          first_name: string;
+          last_name: string;
+          email: string;
+          phone: string;
+          flat_number: string;
+          move_in_date: string;
+          status?: "active" | "inactive" | "pending";
+          type: "owner" | "tenant";
+          emergency_contact: string;
+          avatar?: string;
+        };
+        Update: {
+          society_id?: string;
+          first_name?: string;
+          last_name?: string;
+          email?: string;
+          phone?: string;
+          flat_number?: string;
+          move_in_date?: string;
+          status?: "active" | "inactive" | "pending";
+          type?: "owner" | "tenant";
+          emergency_contact?: string;
+          avatar?: string;
+        };
+      };
+      vehicles: {
+        Row: {
+          id: string;
+          resident_id: string;
+          vehicle_number: string;
+          vehicle_type: "car" | "bike" | "scooter" | "bicycle" | "other";
+          model?: string;
+          color?: string;
+          is_primary: boolean;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          resident_id: string;
+          vehicle_number: string;
+          vehicle_type: "car" | "bike" | "scooter" | "bicycle" | "other";
+          model?: string;
+          color?: string;
+          is_primary?: boolean;
+          is_active?: boolean;
+        };
+        Update: {
+          resident_id?: string;
+          vehicle_number?: string;
+          vehicle_type?: "car" | "bike" | "scooter" | "bicycle" | "other";
+          model?: string;
+          color?: string;
+          is_primary?: boolean;
+          is_active?: boolean;
+        };
+      };
       poll_responses: {
         Row: {
           id: string;

@@ -1,45 +1,64 @@
-import React, { useState } from 'react';
-import { X, User, Mail, Phone, Home, Calendar } from 'lucide-react';
+import React, { useState } from "react";
+import { X, User, Mail, Phone, Home, Calendar } from "lucide-react";
+import { useCreateResident } from "@/services/residentsService";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AddResidentModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) => {
+const AddResidentModal: React.FC<AddResidentModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
+  const { currentTenant } = useTenant();
+  const societyId = currentTenant?.id || "society-1";
+  const createResident = useCreateResident(societyId);
+
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    flatNumber: '',
-    moveInDate: '',
-    emergencyContact: '',
-    vehicleNumber: ''
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    flat_number: "",
+    move_in_date: "",
+    emergency_contact: "",
+    type: "owner" as "owner" | "tenant",
+    status: "active" as "active" | "inactive" | "pending",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log('Adding resident:', formData);
-    onClose();
-    // Reset form
-    setFormData({
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      flatNumber: '',
-      moveInDate: '',
-      emergencyContact: '',
-      vehicleNumber: ''
-    });
+    try {
+      await createResident.mutateAsync({
+        ...formData,
+        society_id: societyId,
+      });
+      onClose();
+      // Reset form
+      setFormData({
+        first_name: "",
+        last_name: "",
+        email: "",
+        phone: "",
+        flat_number: "",
+        move_in_date: "",
+        emergency_contact: "",
+        type: "owner",
+        status: "active",
+      });
+    } catch (error) {
+      console.error("Error adding resident:", error);
+    }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -48,11 +67,16 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75" onClick={onClose}></div>
+        <div
+          className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+          onClick={onClose}
+        ></div>
 
         <div className="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl rounded-2xl">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">Add New Resident</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Add New Resident
+            </h3>
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
@@ -71,8 +95,8 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) 
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
+                    name="first_name"
+                    value={formData.first_name}
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
                     required
@@ -86,8 +110,8 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) 
                 </label>
                 <input
                   type="text"
-                  name="lastName"
-                  value={formData.lastName}
+                  name="last_name"
+                  value={formData.last_name}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
                   required
@@ -137,8 +161,8 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) 
                 <Home className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  name="flatNumber"
-                  value={formData.flatNumber}
+                  name="flat_number"
+                  value={formData.flat_number}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
                   required
@@ -154,8 +178,8 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) 
                 <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="date"
-                  name="moveInDate"
-                  value={formData.moveInDate}
+                  name="move_in_date"
+                  value={formData.move_in_date}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
                   required
@@ -171,26 +195,48 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) 
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="tel"
-                  name="emergencyContact"
-                  value={formData.emergencyContact}
+                  name="emergency_contact"
+                  value={formData.emergency_contact}
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
+                  required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Vehicle Number (Optional)
-              </label>
-              <input
-                type="text"
-                name="vehicleNumber"
-                value={formData.vehicleNumber}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
-                placeholder="e.g., MH01AB1234"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Type
+                </label>
+                <select
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
+                  required
+                >
+                  <option value="owner">Owner</option>
+                  <option value="tenant">Tenant</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
+                  required
+                >
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex space-x-3 pt-4">
@@ -203,9 +249,10 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({ isOpen, onClose }) 
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                disabled={createResident.isPending}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
               >
-                Add Resident
+                {createResident.isPending ? "Adding..." : "Add Resident"}
               </button>
             </div>
           </form>

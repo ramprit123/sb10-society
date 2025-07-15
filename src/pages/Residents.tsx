@@ -1,5 +1,6 @@
 import {
   Calendar,
+  Car,
   Edit,
   Home,
   Mail,
@@ -12,108 +13,56 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import AddResidentModal from "@/components/modals/AddResidentModal";
-
-interface Resident {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  flatNumber: string;
-  moveInDate: string;
-  status: "active" | "inactive" | "pending";
-  type: "owner" | "tenant";
-  emergencyContact: string;
-  vehicleNumber?: string;
-  avatar?: string;
-}
+import VehicleManagement from "@/components/VehicleManagement";
+import { useResidents, useDeleteResident } from "@/services/residentsService";
+import { useTenant } from "@/contexts/TenantContext";
+import { insertDummyResidents } from "@/utils/dummyData";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Residents: React.FC = () => {
+  const { currentTenant } = useTenant();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [addResidentOpen, setAddResidentOpen] = useState(false);
+  const [vehicleManagementOpen, setVehicleManagementOpen] = useState(false);
+  const [selectedResident, setSelectedResident] = useState<any>(null);
 
-  const [residents] = useState<Resident[]>([
-    {
-      id: "1",
-      firstName: "Rajesh",
-      lastName: "Kumar",
-      email: "rajesh.kumar@email.com",
-      phone: "+91 98765 43210",
-      flatNumber: "A-101",
-      moveInDate: "2023-01-15",
-      status: "active",
-      type: "owner",
-      emergencyContact: "+91 98765 43211",
-      vehicleNumber: "MH01AB1234",
-      avatar:
-        "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-    {
-      id: "2",
-      firstName: "Priya",
-      lastName: "Sharma",
-      email: "priya.sharma@email.com",
-      phone: "+91 98765 43212",
-      flatNumber: "B-205",
-      moveInDate: "2023-03-20",
-      status: "active",
-      type: "tenant",
-      emergencyContact: "+91 98765 43213",
-      vehicleNumber: "MH01CD5678",
-      avatar:
-        "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-    {
-      id: "3",
-      firstName: "Amit",
-      lastName: "Patel",
-      email: "amit.patel@email.com",
-      phone: "+91 98765 43214",
-      flatNumber: "C-302",
-      moveInDate: "2022-11-10",
-      status: "active",
-      type: "owner",
-      emergencyContact: "+91 98765 43215",
-      avatar:
-        "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-    {
-      id: "4",
-      firstName: "Sneha",
-      lastName: "Gupta",
-      email: "sneha.gupta@email.com",
-      phone: "+91 98765 43216",
-      flatNumber: "A-405",
-      moveInDate: "2024-01-05",
-      status: "pending",
-      type: "tenant",
-      emergencyContact: "+91 98765 43217",
-      vehicleNumber: "MH01EF9012",
-    },
-    {
-      id: "5",
-      firstName: "Vikram",
-      lastName: "Singh",
-      email: "vikram.singh@email.com",
-      phone: "+91 98765 43218",
-      flatNumber: "B-103",
-      moveInDate: "2023-08-15",
-      status: "inactive",
-      type: "owner",
-      emergencyContact: "+91 98765 43219",
-      avatar:
-        "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150",
-    },
-  ]);
+  // Default to first society if no tenant is selected
+  const societyId = currentTenant?.id || "society-1";
+
+  // Use React Query to fetch residents
+  const { data: residents = [], isLoading, error } = useResidents(societyId);
+  const deleteResident = useDeleteResident(societyId);
+
+  // Function to insert dummy data
+  const handleInsertDummyData = async () => {
+    try {
+      await insertDummyResidents();
+      // React Query will automatically refetch due to invalidation
+    } catch (error) {
+      console.error("Failed to insert dummy data:", error);
+    }
+  };
+
+  // Function to open vehicle management modal
+  const handleManageVehicles = (resident: any) => {
+    setSelectedResident(resident);
+    setVehicleManagementOpen(true);
+  };
 
   const filteredResidents = residents.filter((resident) => {
     const matchesSearch =
-      resident.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resident.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resident.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resident.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       resident.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resident.flatNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      resident.flat_number.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       filterStatus === "all" || resident.status === filterStatus;
@@ -129,6 +78,36 @@ const Residents: React.FC = () => {
     tenants: residents.filter((r) => r.type === "tenant").length,
   };
 
+  if (isLoading) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-red-800">
+              Error loading residents: {error.message}
+            </div>
+            <button
+              onClick={handleInsertDummyData}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Insert Dummy Data
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -141,13 +120,22 @@ const Residents: React.FC = () => {
             Manage all residents in your society
           </p>
         </div>
-        <button
-          onClick={() => setAddResidentOpen(true)}
-          className="mt-4 sm:mt-0 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center"
-        >
-          <Plus className="h-5 w-5 mr-2" />
-          Add Resident
-        </button>
+        <div className="flex gap-2 mt-4 sm:mt-0">
+          <button
+            onClick={handleInsertDummyData}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Insert Dummy Data
+          </button>
+          <button
+            onClick={() => setAddResidentOpen(true)}
+            className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Resident
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -226,26 +214,28 @@ const Residents: React.FC = () => {
           </div>
 
           <div className="flex gap-4">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="pending">Pending</option>
-            </select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+              </SelectContent>
+            </Select>
 
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
-            >
-              <option value="all">All Types</option>
-              <option value="owner">Owners</option>
-              <option value="tenant">Tenants</option>
-            </select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="owner">Owners</SelectItem>
+                <SelectItem value="tenant">Tenants</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -272,6 +262,9 @@ const Residents: React.FC = () => {
                   Status
                 </th>
                 <th className="text-left py-3 px-6 font-medium text-gray-900">
+                  Vehicles
+                </th>
+                <th className="text-left py-3 px-6 font-medium text-gray-900">
                   Move-in Date
                 </th>
                 <th className="text-left py-3 px-6 font-medium text-gray-900">
@@ -289,12 +282,12 @@ const Residents: React.FC = () => {
                           resident.avatar ||
                           "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150"
                         }
-                        alt={`${resident.firstName} ${resident.lastName}`}
+                        alt={`${resident.first_name} ${resident.last_name}`}
                         className="h-10 w-10 rounded-full mr-3 object-cover"
                       />
                       <div>
                         <div className="font-medium text-gray-900">
-                          {resident.firstName} {resident.lastName}
+                          {resident.first_name} {resident.last_name}
                         </div>
                         <div className="text-sm text-gray-500">
                           {resident.email}
@@ -317,7 +310,9 @@ const Residents: React.FC = () => {
                   <td className="py-4 px-6">
                     <div className="flex items-center">
                       <Home className="h-4 w-4 mr-2 text-gray-400" />
-                      <span className="font-medium">{resident.flatNumber}</span>
+                      <span className="font-medium">
+                        {resident.flat_number}
+                      </span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
@@ -345,9 +340,40 @@ const Residents: React.FC = () => {
                     </span>
                   </td>
                   <td className="py-4 px-6">
+                    <div className="space-y-1">
+                      {resident.vehicles && resident.vehicles.length > 0 ? (
+                        resident.vehicles
+                          .slice(0, 2)
+                          .map((vehicle: any, index: number) => (
+                            <div
+                              key={vehicle.id || index}
+                              className="flex items-center text-sm text-gray-900"
+                            >
+                              <Car className="h-4 w-4 mr-2 text-gray-400" />
+                              <span className="font-medium">
+                                {vehicle.vehicle_number}
+                              </span>
+                              <span className="text-xs text-gray-500 ml-2">
+                                ({vehicle.vehicle_type})
+                              </span>
+                            </div>
+                          ))
+                      ) : (
+                        <span className="text-sm text-gray-500">
+                          No vehicles
+                        </span>
+                      )}
+                      {resident.vehicles && resident.vehicles.length > 2 && (
+                        <span className="text-xs text-gray-500">
+                          +{resident.vehicles.length - 2} more
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
                     <div className="flex items-center text-sm text-gray-900">
                       <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                      {new Date(resident.moveInDate).toLocaleDateString()}
+                      {new Date(resident.move_in_date).toLocaleDateString()}
                     </div>
                   </td>
                   <td className="py-4 px-6">
@@ -355,7 +381,26 @@ const Residents: React.FC = () => {
                       <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100">
+                      <button
+                        onClick={() => handleManageVehicles(resident)}
+                        className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-gray-100"
+                        title="Manage Vehicles"
+                      >
+                        <Car className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "Are you sure you want to delete this resident?"
+                            )
+                          ) {
+                            deleteResident.mutate(resident.id);
+                          }
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100"
+                        disabled={deleteResident.isPending}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                       <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
@@ -374,6 +419,18 @@ const Residents: React.FC = () => {
         isOpen={addResidentOpen}
         onClose={() => setAddResidentOpen(false)}
       />
+
+      {selectedResident && (
+        <VehicleManagement
+          residentId={selectedResident.id}
+          residentName={`${selectedResident.first_name} ${selectedResident.last_name}`}
+          isOpen={vehicleManagementOpen}
+          onClose={() => {
+            setVehicleManagementOpen(false);
+            setSelectedResident(null);
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -29,6 +29,7 @@ import React, { useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { useSocietyStore } from "../stores/societyStore";
+import { TenantProvider } from "@/contexts/TenantContext";
 
 interface NavigationItem {
   name: string;
@@ -554,9 +555,11 @@ const DashboardLayout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
-          <Outlet />
-        </main>
+        <TenantProvider>
+          <main className="flex-1 overflow-y-auto">
+            <Outlet />
+          </main>
+        </TenantProvider>
       </div>
     </div>
   );
