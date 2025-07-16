@@ -96,26 +96,6 @@ const Residents: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-red-800">
-              Error loading residents: {error.message}
-            </div>
-            <button
-              onClick={handleInsertDummyData}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              Insert Dummy Data
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -131,7 +111,7 @@ const Residents: React.FC = () => {
         <div className="flex gap-2 mt-4 sm:mt-0">
           <button
             onClick={handleInsertDummyData}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center"
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors  items-center hidden"
           >
             <Plus className="h-5 w-5 mr-2" />
             Insert Dummy Data
@@ -248,9 +228,10 @@ const Residents: React.FC = () => {
         </div>
       </div>
 
-      {/* Residents List */}
+      {/* Responsive Residents List */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -269,12 +250,7 @@ const Residents: React.FC = () => {
                 <th className="text-left py-3 px-6 font-medium text-gray-900">
                   Status
                 </th>
-                <th className="text-left py-3 px-6 font-medium text-gray-900">
-                  Vehicles
-                </th>
-                <th className="text-left py-3 px-6 font-medium text-gray-900">
-                  Move-in Date
-                </th>
+
                 <th className="text-left py-3 px-6 font-medium text-gray-900">
                   Actions
                 </th>
@@ -353,48 +329,13 @@ const Residents: React.FC = () => {
                       {resident.status}
                     </span>
                   </td>
-                  <td className="py-4 px-6">
-                    <div className="space-y-1">
-                      {resident.vehicles && resident.vehicles.length > 0 ? (
-                        resident.vehicles
-                          .slice(0, 2)
-                          .map((vehicle: any, index: number) => (
-                            <div
-                              key={vehicle.id || index}
-                              className="flex items-center text-sm text-gray-900"
-                            >
-                              <Car className="h-4 w-4 mr-2 text-gray-400" />
-                              <span className="font-medium">
-                                {vehicle.vehicle_number}
-                              </span>
-                              <span className="text-xs text-gray-500 ml-2">
-                                ({vehicle.vehicle_type})
-                              </span>
-                            </div>
-                          ))
-                      ) : (
-                        <span className="text-sm text-gray-500">
-                          No vehicles
-                        </span>
-                      )}
-                      {resident.vehicles && resident.vehicles.length > 2 && (
-                        <span className="text-xs text-gray-500">
-                          +{resident.vehicles.length - 2} more
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                      {new Date(resident.move_in_date).toLocaleDateString()}
-                    </div>
-                  </td>
+
                   <td className="py-4 px-6">
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => handleEditResident(resident)}
                         className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                        title="Edit Resident"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
@@ -416,6 +357,7 @@ const Residents: React.FC = () => {
                           }
                         }}
                         className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100"
+                        title="Delete Resident"
                         disabled={deleteResident.isPending}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -430,6 +372,143 @@ const Residents: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile/Tablet Cards */}
+        <div className="block lg:hidden">
+          <div className="divide-y divide-gray-200">
+            {filteredResidents.map((resident) => (
+              <div key={resident.id} className="p-4 hover:bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={
+                        resident.avatar ||
+                        "https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150"
+                      }
+                      alt={`${resident.first_name} ${resident.last_name}`}
+                      className="h-12 w-12 rounded-full object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-2">
+                        <p className="font-medium text-gray-900 truncate">
+                          {resident.first_name} {resident.last_name}
+                        </p>
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            resident.type === "owner"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
+                        >
+                          {resident.type}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            resident.status === "active"
+                              ? "bg-green-100 text-green-800"
+                              : resident.status === "inactive"
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {resident.status}
+                        </span>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Home className="h-4 w-4 mr-1" />
+                          {resident.flat_number}
+                        </div>
+                      </div>
+                      {resident.type === "tenant" && resident.owner && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          Linked to: {resident.owner.first_name}{" "}
+                          {resident.owner.last_name}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleEditResident(resident)}
+                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                      title="Edit Resident"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleManageVehicles(resident)}
+                      className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-gray-100"
+                      title="Manage Vehicles"
+                    >
+                      <Car className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            "Are you sure you want to delete this resident?"
+                          )
+                        ) {
+                          deleteResident.mutate(resident.id);
+                        }
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100"
+                      title="Delete Resident"
+                      disabled={deleteResident.isPending}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <div className="flex items-center text-sm text-gray-900 mb-1">
+                      <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                      {resident.phone}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                      {resident.email}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center text-sm text-gray-900 mb-1">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                      {new Date(resident.move_in_date).toLocaleDateString()}
+                    </div>
+                    {resident.vehicles && resident.vehicles.length > 0 && (
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Car className="h-4 w-4 mr-2 text-gray-400" />
+                        <span>
+                          {resident.vehicles.length} vehicle
+                          {resident.vehicles.length > 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Empty State */}
+        {filteredResidents.length === 0 && (
+          <div className="text-center py-12">
+            <User className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No residents found
+            </h3>
+            <p className="text-gray-500">
+              {searchTerm || filterStatus !== "all" || filterType !== "all"
+                ? "Try adjusting your filters or search terms"
+                : "Get started by adding your first resident"}
+            </p>
+          </div>
+        )}
       </div>
 
       <AddResidentModal
