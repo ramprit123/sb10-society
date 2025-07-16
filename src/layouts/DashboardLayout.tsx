@@ -10,6 +10,7 @@ import {
   CreditCard,
   Eye,
   FileText,
+  HelpCircle,
   Home,
   Lock,
   LogOut,
@@ -30,6 +31,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../stores/authStore";
 import { useSocietyStore } from "../stores/societyStore";
 import { TenantProvider } from "@/contexts/TenantContext";
+import ChatbotToggle from "@/components/ChatbotToggle";
 
 interface NavigationItem {
   name: string;
@@ -252,6 +254,13 @@ const DashboardLayout: React.FC = () => {
           name: "Society Settings",
           icon: Settings,
           path: `/tenant/${currentSociety?.id}/settings`,
+          tenantOnly: true,
+          roles: ["super_admin", "admin"],
+        },
+        {
+          name: "FAQ Management",
+          icon: HelpCircle,
+          path: `/tenant/${currentSociety?.id}/faq-management`,
           tenantOnly: true,
           roles: ["super_admin", "admin"],
         },
@@ -559,6 +568,7 @@ const DashboardLayout: React.FC = () => {
           <main className="flex-1 overflow-y-auto">
             <Outlet />
           </main>
+          <ChatbotToggle />
         </TenantProvider>
       </div>
     </div>

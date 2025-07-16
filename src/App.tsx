@@ -29,6 +29,7 @@ import Settings from "./pages/Settings";
 import SystemSettings from "./pages/SystemSettings";
 import UserManagement from "./pages/UserManagement";
 import VisitorLogs from "./pages/VisitorLogs";
+import FAQManagement from "./pages/FAQManagement";
 import { Toaster } from "sonner";
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
               <Route path="polls-surveys" element={<PollsSurveys />} />
               <Route path="meetings" element={<Meetings />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="faq-management" element={<FAQManagement />} />
               <Route path="user-management" element={<UserManagement />} />
               <Route path="system-settings" element={<SystemSettings />} />
             </Route>
