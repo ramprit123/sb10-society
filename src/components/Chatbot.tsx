@@ -51,6 +51,9 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     null
   );
   const [chatbotSize, setChatbotSize] = useState<ChatbotSize>("normal");
+  const [typewriterText, setTypewriterText] = useState<string>("");
+  const [isTypewriting, setIsTypewriting] = useState(false);
+  const typewriterIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { currentTenant } = useTenant();
@@ -94,6 +97,50 @@ export const Chatbot: React.FC<ChatbotProps> = ({
     }
   };
 
+  const startTypewriter = (text: string, messageId: string) => {
+    setIsTypewriting(true);
+    setTypewriterText("");
+
+    let currentIndex = 0;
+    const speed = 30; // milliseconds per character
+
+    typewriterIntervalRef.current = setInterval(() => {
+      if (currentIndex < text.length) {
+        setTypewriterText(text.slice(0, currentIndex + 1));
+        currentIndex++;
+        scrollToBottom();
+      } else {
+        clearInterval(typewriterIntervalRef.current!);
+        setIsTypewriting(false);
+
+        // Update the actual message with the full text
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, content: text, isTyping: false }
+              : msg
+          )
+        );
+      }
+    }, speed);
+  };
+
+  const stopTypewriter = () => {
+    if (typewriterIntervalRef.current) {
+      clearInterval(typewriterIntervalRef.current);
+      typewriterIntervalRef.current = null;
+    }
+    setIsTypewriting(false);
+    setTypewriterText("");
+  };
+
+  // Cleanup typewriter on unmount
+  useEffect(() => {
+    return () => {
+      stopTypewriter();
+    };
+  }, []);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -101,6 +148,9 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   const sendMessage = async (messageText?: string) => {
     const text = messageText || inputMessage.trim();
     if (!text || isLoading) return;
+
+    // Stop any ongoing typewriter effect
+    stopTypewriter();
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -128,17 +178,30 @@ export const Chatbot: React.FC<ChatbotProps> = ({
       // Generate AI response
       const response = await aiService.generateResponse(text, messages);
 
-      // Remove typing indicator and add actual response
+      // Remove typing indicator and add message for typewriter effect
+      const aiMessageId = (Date.now() + 1).toString();
       const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
+        id: aiMessageId,
         type: "assistant",
-        content: response,
+        content: "", // Start with empty content
         timestamp: new Date(),
+        isTyping: false,
       };
 
-      const finalMessages = [...newMessages, aiMessage];
-      setMessages(finalMessages);
-      await saveChatHistory(finalMessages);
+      const messagesWithAI = [...newMessages, aiMessage];
+      setMessages(messagesWithAI);
+
+      // Start typewriter effect
+      startTypewriter(response, aiMessageId);
+
+      // Save chat history after typewriter completes
+      setTimeout(() => {
+        const finalMessages = [
+          ...newMessages,
+          { ...aiMessage, content: response },
+        ];
+        saveChatHistory(finalMessages);
+      }, response.length * 30 + 100); // Wait for typewriter to complete
 
       // Check if this might be a ticket
       const ticketSuggestion = aiService.analyzeForTicket(text);
@@ -444,7 +507,17 @@ export const Chatbot: React.FC<ChatbotProps> = ({
                             </div>
                           ) : (
                             <p className="text-sm leading-relaxed">
-                              {formatMessage(message.content)}
+                              {message.type === "assistant" &&
+                              isTypewriting &&
+                              messages[messages.length - 1]?.id ===
+                                message.id ? (
+                                <>
+                                  {formatMessage(typewriterText)}
+                                  <span className="animate-pulse">|</span>
+                                </>
+                              ) : (
+                                formatMessage(message.content)
+                              )}
                             </p>
                           )}
                         </div>
