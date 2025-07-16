@@ -45,6 +45,10 @@ interface NavigationItem {
 
 const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState<boolean>(() => {
+    const saved = localStorage.getItem("sidebarVisible");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [tenantDropdownOpen, setTenantDropdownOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState<string[]>([
     "Overview",
@@ -60,6 +64,35 @@ const DashboardLayout: React.FC = () => {
   } = useSocietyStore();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Toggle mobile sidebar with Ctrl/Cmd + B
+      if ((event.ctrlKey || event.metaKey) && event.key === "b") {
+        event.preventDefault();
+        setSidebarOpen((prev) => !prev);
+      }
+
+      // Toggle desktop sidebar visibility with Ctrl/Cmd + Shift + B
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.shiftKey &&
+        event.key === "B"
+      ) {
+        event.preventDefault();
+        toggleSidebarPosition();
+      }
+
+      // Close mobile sidebar with Escape
+      if (event.key === "Escape" && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [sidebarOpen, sidebarVisible]);
 
   // Fetch societies when component mounts
   useEffect(() => {
@@ -293,6 +326,12 @@ const DashboardLayout: React.FC = () => {
     setTenantDropdownOpen(false);
   };
 
+  const toggleSidebarPosition = () => {
+    const newVisibility = !sidebarVisible;
+    setSidebarVisible(newVisibility);
+    localStorage.setItem("sidebarVisible", JSON.stringify(newVisibility));
+  };
+
   const isActivePath = (path: string) => {
     return location.pathname === path;
   };
@@ -326,69 +365,90 @@ const DashboardLayout: React.FC = () => {
   const SidebarContent = () => (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-        <div className="flex items-center">
-          <Building2 className="h-8 w-8 text-purple-600" />
-          <span className="ml-2 text-xl font-bold text-gray-900">
+      <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-gray-200">
+        <div className="flex items-center min-w-0">
+          <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 flex-shrink-0" />
+          <span className="ml-2 text-base sm:text-xl font-bold text-gray-900 truncate">
             Society Connect
           </span>
         </div>
-        <button
-          onClick={() => setSidebarOpen(false)}
-          className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
-        >
-          <X className="h-6 w-6" />
-        </button>
+        <div className="flex items-center space-x-1 sm:space-x-2">
+          {/* Desktop sidebar toggle */}
+          <button
+            onClick={toggleSidebarPosition}
+            className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+            title={`${sidebarVisible ? "Hide" : "Show"} sidebar (⌘+Shift+B)`}
+            aria-label={`${sidebarVisible ? "Hide" : "Show"} sidebar`}
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
+          {/* Mobile sidebar close */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+            title="Close sidebar"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
+          </button>
+        </div>
       </div>
 
       {/* Tenant Selector */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-3 sm:p-4 border-b border-gray-200">
         <div className="relative">
           <button
             onClick={() => setTenantDropdownOpen(!tenantDropdownOpen)}
-            className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            className="w-full flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <div className="flex items-center">
-              <Building className="h-5 w-5 text-gray-500 mr-3" />
-              <div className="text-left">
-                <div className="text-sm font-medium text-gray-900">
+            <div className="flex items-center min-w-0">
+              <Building className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500 mr-2 sm:mr-3 flex-shrink-0" />
+              <div className="text-left min-w-0 flex-1">
+                <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                   {isGlobalView
                     ? "All Societies"
                     : currentSociety?.name || "Select Society"}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-500 truncate">
                   {isGlobalView
                     ? `${societies.length} societies`
                     : "Current Society"}
                 </div>
               </div>
             </div>
-            <ChevronDown className="h-4 w-4 text-gray-400" />
+            <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400 flex-shrink-0" />
           </button>
 
           {tenantDropdownOpen && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-64 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 sm:max-h-64 overflow-y-auto">
               <button
                 onClick={() => handleSocietySwitch("global")}
-                className={`w-full px-4 py-3 text-left hover:bg-gray-50 ${
+                className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-left hover:bg-gray-50 ${
                   isGlobalView ? "bg-purple-50 text-purple-700" : ""
                 }`}
               >
-                <div className="font-medium">All Societies</div>
-                <div className="text-sm text-gray-500">Global Overview</div>
+                <div className="font-medium text-sm sm:text-base">
+                  All Societies
+                </div>
+                <div className="text-xs sm:text-sm text-gray-500">
+                  Global Overview
+                </div>
               </button>
               {societies.map((society) => (
                 <button
                   key={society.id}
                   onClick={() => handleSocietySwitch(society.id)}
-                  className={`w-full px-4 py-3 text-left hover:bg-gray-50 border-t border-gray-100 ${
+                  className={`w-full px-3 sm:px-4 py-2 sm:py-3 text-left hover:bg-gray-50 border-t border-gray-100 ${
                     currentSociety?.id === society.id && !isGlobalView
                       ? "bg-purple-50 text-purple-700"
                       : ""
                   }`}
                 >
-                  <div className="font-medium">{society.name}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="font-medium text-sm sm:text-base truncate">
+                    {society.name}
+                  </div>
+                  <div className="text-xs sm:text-sm text-gray-500">
                     {society.totalUnits} units
                   </div>
                 </button>
@@ -399,7 +459,7 @@ const DashboardLayout: React.FC = () => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 px-3 sm:px-4 py-3 sm:py-4 space-y-1 sm:space-y-2 overflow-y-auto">
         {filteredNavigationItems.map((category) => {
           const isExpanded = expandedSections.includes(category.category);
           const hasMultipleItems = category.items.length > 1;
@@ -411,20 +471,20 @@ const DashboardLayout: React.FC = () => {
                 <>
                   <button
                     onClick={() => toggleSection(category.category)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="w-full flex items-center justify-between px-2 sm:px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       {category.category}
                     </span>
                     {isExpanded ? (
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                      <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
                     ) : (
-                      <ChevronRight className="h-4 w-4 text-gray-400" />
+                      <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
                     )}
                   </button>
 
                   {isExpanded && (
-                    <div className="ml-3 space-y-1 mt-2">
+                    <div className="ml-2 sm:ml-3 space-y-1 mt-1 sm:mt-2">
                       {category.items.map((item) => (
                         <button
                           key={item.name}
@@ -434,14 +494,14 @@ const DashboardLayout: React.FC = () => {
                               setSidebarOpen(false);
                             }
                           }}
-                          className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                          className={`w-full flex items-center px-2 sm:px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                             item.path && isActivePath(item.path)
                               ? "bg-purple-100 text-purple-700"
                               : "text-gray-700 hover:bg-gray-100"
                           }`}
                         >
-                          <item.icon className="h-4 w-4 mr-3" />
-                          {item.name}
+                          <item.icon className="h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 flex-shrink-0" />
+                          <span className="truncate">{item.name}</span>
                         </button>
                       ))}
                     </div>
@@ -450,7 +510,7 @@ const DashboardLayout: React.FC = () => {
               ) : (
                 // Single item - no collapsing needed
                 <div>
-                  <div className="px-3 py-2">
+                  <div className="px-2 sm:px-3 py-2">
                     <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       {category.category}
                     </span>
@@ -464,14 +524,14 @@ const DashboardLayout: React.FC = () => {
                           setSidebarOpen(false);
                         }
                       }}
-                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      className={`w-full flex items-center px-2 sm:px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                         item.path && isActivePath(item.path)
                           ? "bg-purple-100 text-purple-700"
                           : "text-gray-700 hover:bg-gray-100"
                       }`}
                     >
-                      <item.icon className="h-5 w-5 mr-3" />
-                      {item.name}
+                      <item.icon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 flex-shrink-0" />
+                      <span className="truncate">{item.name}</span>
                     </button>
                   ))}
                 </div>
@@ -482,23 +542,28 @@ const DashboardLayout: React.FC = () => {
       </nav>
 
       {/* User Info & Logout */}
-      <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center mb-3">
-          <div className="ml-3">
-            <div className="text-sm font-medium text-gray-900">
-              {profile?.name}
+      <div className="p-3 sm:p-4 border-t border-gray-200">
+        <div className="flex items-center mb-2 sm:mb-3">
+          <div className="h-8 w-8 sm:h-10 sm:w-10 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <span className="text-sm sm:text-base font-medium text-purple-600">
+              {profile?.name?.charAt(0)?.toUpperCase() || "U"}
+            </span>
+          </div>
+          <div className="ml-3 min-w-0 flex-1">
+            <div className="text-sm font-medium text-gray-900 truncate">
+              {profile?.name || "User"}
             </div>
-            <div className="text-xs text-gray-500 capitalize">
-              {profile?.global_role?.replace("_", " ")}
+            <div className="text-xs text-gray-500 capitalize truncate">
+              {profile?.global_role?.replace("_", " ") || "Member"}
             </div>
           </div>
         </div>
         <button
           onClick={signOut}
-          className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="w-full flex items-center px-2 sm:px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
         >
-          <LogOut className="h-4 w-4 mr-3" />
-          Logout
+          <LogOut className="h-3 w-3 sm:h-4 sm:w-4 mr-2 sm:mr-3 flex-shrink-0" />
+          <span className="truncate">Logout</span>
         </button>
       </div>
     </>
@@ -507,9 +572,11 @@ const DashboardLayout: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 bg-white shadow-lg border-r border-gray-200">
-        <SidebarContent />
-      </div>
+      {sidebarVisible && (
+        <div className="hidden lg:flex lg:flex-col lg:w-64 xl:w-72 lg:fixed lg:inset-y-0 bg-white shadow-lg border-r border-gray-200 lg:left-0 z-30">
+          <SidebarContent />
+        </div>
+      )}
 
       {/* Mobile Sidebar */}
       <div
@@ -518,45 +585,84 @@ const DashboardLayout: React.FC = () => {
         }`}
       >
         <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-75"
+          className="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity"
           onClick={() => setSidebarOpen(false)}
         ></div>
-        <div className="relative flex flex-col w-64 h-full bg-white shadow-xl">
+        <div className="relative flex flex-col w-64 sm:w-72 md:w-80 h-full bg-white shadow-xl transform transition-transform">
           <SidebarContent />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${
+          sidebarVisible ? "lg:ml-64 xl:ml-72" : "lg:ml-0"
+        }`}
+      >
         {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center">
+            <div className="flex items-center min-w-0 flex-1">
+              {/* Mobile hamburger menu */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 mr-2 flex-shrink-0 transition-colors"
+                title="Open sidebar"
+                aria-label="Open sidebar"
               >
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
-              <h1 className="ml-4 lg:ml-0 text-xl sm:text-2xl font-semibold text-gray-900">
+
+              {/* Desktop hamburger menu (when sidebar is hidden) */}
+              {!sidebarVisible && (
+                <button
+                  onClick={toggleSidebarPosition}
+                  className="hidden lg:block p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 mr-2 flex-shrink-0 transition-colors"
+                  title="Show sidebar (⌘+Shift+B)"
+                  aria-label="Show sidebar"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+              )}
+
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 truncate">
                 {isGlobalView
                   ? "Global Dashboard"
                   : `${currentSociety?.name || "Dashboard"}`}
               </h1>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="relative hidden md:block">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Desktop search */}
+              <div className="relative hidden sm:block">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent w-32 sm:w-48 md:w-64 lg:w-48 xl:w-64 transition-all duration-200"
                 />
               </div>
 
-              <button className="relative p-2 text-gray-400 hover:text-gray-500">
-                <Bell className="h-6 w-6" />
+              {/* Mobile search button */}
+              <button
+                className="sm:hidden p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => {
+                  // You can implement a mobile search modal here
+                  console.log("Open mobile search");
+                }}
+                title="Search"
+                aria-label="Search"
+              >
+                <Search className="h-5 w-5" />
+              </button>
+
+              {/* Notification bell */}
+              <button
+                className="relative p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Notifications"
+                aria-label="Notifications"
+              >
+                <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
               </button>
             </div>
