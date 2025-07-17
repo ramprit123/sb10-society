@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "db:setup": "chmod +x database/setup.sh && ./database/setup.sh",
+    "db:migrate": "chmod +x database/migrate.sh && ./database/migrate.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",
