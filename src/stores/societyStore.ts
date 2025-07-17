@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
+import { DEV_UUIDS } from "../utils/uuidUtils";
 
 interface Society {
   id: string;
@@ -28,6 +29,7 @@ interface SocietyState {
   fetchSocieties: () => Promise<void>;
   setCurrentSociety: (society: Society | null) => void;
   switchSociety: (societyId: string) => void;
+  restoreSocietyFromStorage: () => boolean;
   addSociety: (society: Omit<Society, "id">) => Promise<void>;
   updateSociety: (
     societyId: string,
@@ -40,7 +42,7 @@ interface SocietyState {
 // Mock data for now - you can replace this with real data from Supabase
 const mockSocieties: Society[] = [
   {
-    id: "society-1",
+    id: DEV_UUIDS.SOCIETY_1,
     name: "Greenview Heights",
     address: "123 Park Avenue, Mumbai, MH 400001",
     totalUnits: 120,
@@ -55,7 +57,7 @@ const mockSocieties: Society[] = [
     },
   },
   {
-    id: "society-2",
+    id: DEV_UUIDS.SOCIETY_2,
     name: "Royal Residency",
     address: "456 Queens Road, Delhi, DL 110001",
     totalUnits: 80,
@@ -70,7 +72,7 @@ const mockSocieties: Society[] = [
     },
   },
   {
-    id: "society-3",
+    id: DEV_UUIDS.SOCIETY_3,
     name: "Sunset Villa",
     address: "789 Beach Road, Bangalore, KA 560001",
     totalUnits: 45,
@@ -105,7 +107,7 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
         // Use mock societies with proper UUIDs as fallback
         const fallbackSocieties: Society[] = [
           {
-            id: "550e8400-e29b-41d4-a716-446655440001",
+            id: DEV_UUIDS.SOCIETY_1,
             name: "Greenview Heights",
             address: "123 Park Avenue, Mumbai, MH 400001",
             totalUnits: 120,
@@ -120,7 +122,7 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
             },
           },
           {
-            id: "550e8400-e29b-41d4-a716-446655440002",
+            id: DEV_UUIDS.SOCIETY_2,
             name: "Sunset Gardens",
             address: "456 Garden Street, Mumbai, MH 400002",
             totalUnits: 80,
@@ -135,7 +137,7 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
             },
           },
           {
-            id: "550e8400-e29b-41d4-a716-446655440003",
+            id: DEV_UUIDS.SOCIETY_3,
             name: "Royal Residency",
             address: "789 Royal Road, Mumbai, MH 400003",
             totalUnits: 150,
@@ -226,6 +228,45 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
     if (society) {
       get().setCurrentSociety(society);
       get().setGlobalView(false);
+
+      // Persist the switch in localStorage for page reloads
+      try {
+        localStorage.setItem("currentSociety", society.id);
+        localStorage.setItem("lastSocietySwitch", Date.now().toString());
+      } catch (error) {
+        console.warn(
+          "Failed to persist society switch to localStorage:",
+          error
+        );
+      }
+    } else {
+      console.warn(`Society with ID ${societyId} not found`);
+    }
+  },
+
+  restoreSocietyFromStorage: () => {
+    try {
+      const { societies } = get();
+      const storedSocietyId = localStorage.getItem("currentSociety");
+
+      if (!storedSocietyId || societies.length === 0) {
+        return false;
+      }
+
+      const society = societies.find((s) => s.id === storedSocietyId);
+      if (society) {
+        get().setCurrentSociety(society);
+        get().setGlobalView(false);
+        return true;
+      }
+
+      // Clean up invalid stored society ID
+      localStorage.removeItem("currentSociety");
+      localStorage.removeItem("lastSocietySwitch");
+      return false;
+    } catch (error) {
+      console.warn("Failed to restore society from localStorage:", error);
+      return false;
     }
   },
 

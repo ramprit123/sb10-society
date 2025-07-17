@@ -27,7 +27,8 @@ import {
 } from "@/components/ui/select";
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/lib/supabase";
-import { useOwners, useUpdateResident } from "@/services/residentsService";
+import { useUpdateResident, useOwners } from "@/services/residentsService";
+import { DEV_UUIDS } from "@/utils/uuidUtils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Calendar,
@@ -105,7 +106,7 @@ const EditResidentModal: React.FC<EditResidentModalProps> = ({
   resident,
 }) => {
   const { currentTenant } = useTenant();
-  const societyId = currentTenant?.id || "society-1";
+  const societyId = currentTenant?.id || DEV_UUIDS.SOCIETY_1;
   const updateResident = useUpdateResident(societyId);
   const { data: owners = [] } = useOwners(societyId);
 
@@ -166,15 +167,71 @@ const EditResidentModal: React.FC<EditResidentModalProps> = ({
       }
 
       const file = event.target.files[0];
+
+      // Validate file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error(
+          "Please select a valid image file (JPEG, PNG, WebP, or GIF)."
+        );
+      }
+
+      // Validate file size (5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        throw new Error("File size must be less than 5MB.");
+      }
+
       const fileExt = file.name.split(".").pop();
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
+
+      // First check if bucket exists
+      const { data: buckets, error: bucketsError } =
+        await supabase.storage.listBuckets();
+
+      if (bucketsError) {
+        throw new Error(
+          "Unable to access storage. Please contact administrator."
+        );
+      }
+
+      const bucketExists = buckets?.some((bucket) => bucket.id === "residents");
+
+      if (!bucketExists) {
+        throw new Error(
+          "Storage bucket 'residents' not found. Please create it in the Supabase Dashboard first or contact administrator."
+        );
+      }
 
       const { error: uploadError } = await supabase.storage
         .from("residents")
         .upload(filePath, file);
 
       if (uploadError) {
+        // Handle specific bucket not found error
+        if (
+          uploadError.message.includes("Bucket not found") ||
+          uploadError.message.includes("bucket does not exist")
+        ) {
+          throw new Error(
+            "Storage bucket not configured. Please create the 'residents' bucket in Supabase Dashboard first."
+          );
+        }
+        if (
+          uploadError.message.includes("row-level security") ||
+          uploadError.message.includes("policy")
+        ) {
+          throw new Error(
+            "Storage permissions not configured. Please set up storage policies in Supabase Dashboard."
+          );
+        }
         throw uploadError;
       }
 
@@ -186,9 +243,14 @@ const EditResidentModal: React.FC<EditResidentModalProps> = ({
 
       toast.success("Image uploaded successfully!");
     } catch (error) {
+      console.error("Upload error:", error);
       toast.error(
         error instanceof Error ? error.message : "Error uploading image"
       );
+      // Clear the file input on error
+      if (event.target) {
+        event.target.value = "";
+      }
     } finally {
       setUploading(false);
     }

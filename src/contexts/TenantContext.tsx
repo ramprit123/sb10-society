@@ -1,36 +1,28 @@
+import {
+  useCreateSociety,
+  useDeleteSociety,
+  useSocieties,
+  useUpdateSociety,
+  type SocietyInsert,
+  type SocietyRow,
+  type SocietyUpdate,
+} from "@/services/societiesService";
+import { useAuthStore } from "@/stores/authStore";
 import React, {
   createContext,
-  useContext,
-  useState,
-  useEffect,
   ReactNode,
+  useContext,
+  useEffect,
+  useState,
 } from "react";
-import { useAuth } from "./AuthContext";
-
-interface Tenant {
-  id: string;
-  name: string;
-  address: string;
-  totalUnits: number;
-  occupiedUnits: number;
-  totalResidents: number;
-  pendingDues: number;
-  status: "active" | "inactive" | "maintenance";
-  logo?: string;
-  settings: {
-    currency: string;
-    timezone: string;
-    maintenanceDay: number;
-  };
-}
 
 interface TenantContextType {
-  currentTenant: Tenant | null;
-  tenants: Tenant[];
-  setCurrentTenant: (tenant: Tenant | null) => void;
+  currentTenant: SocietyRow | null;
+  tenants: SocietyRow[];
+  setCurrentTenant: (tenant: SocietyRow | null) => void;
   switchTenant: (tenantId: string) => void;
-  addTenant: (tenant: Omit<Tenant, "id">) => void;
-  updateTenant: (tenantId: string, updates: Partial<Tenant>) => void;
+  addTenant: (tenantData: SocietyInsert) => void;
+  updateTenant: (tenantId: string, updates: SocietyUpdate) => void;
   deleteTenant: (tenantId: string) => void;
   isGlobalView: boolean;
   setGlobalView: (global: boolean) => void;
@@ -49,21 +41,30 @@ export const useTenant = () => {
 export const TenantProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const { user } = useAuth();
-  const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const { profile } = useAuthStore();
+  const [currentTenant, setCurrentTenant] = useState<SocietyRow | null>(null);
+  const { data: societies = [] } = useSocieties();
+  // All societies are available to user; membership filtering not implemented
+  const tenants = societies;
+
+  const createSociety = useCreateSociety();
+  const updateSociety = useUpdateSociety();
+  const deleteSociety = useDeleteSociety();
   const [isGlobalView, setGlobalView] = useState(true);
 
   useEffect(() => {
-    const savedTenantId = localStorage.getItem("currentTenant");
-    if (savedTenantId && user) {
-      const tenant = tenants.find((t) => t.id === savedTenantId);
-      if (tenant && user.tenants.includes(tenant.id)) {
+    if (!profile) return;
+    const saved = localStorage.getItem("currentTenant");
+    const defaultId = profile.default_society_id;
+    const tenantId = saved ?? defaultId;
+    if (tenantId) {
+      const tenant = tenants.find((t) => t.id === tenantId);
+      if (tenant) {
         setCurrentTenant(tenant);
         setGlobalView(false);
       }
     }
-  }, [user, tenants]);
+  }, [profile, tenants]);
 
   const switchTenant = (tenantId: string) => {
     const tenant = tenants.find((t) => t.id === tenantId);
@@ -74,29 +75,21 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const addTenant = (tenantData: Omit<Tenant, "id">) => {
-    const newTenant: Tenant = {
-      ...tenantData,
-      id: `society-${Date.now()}`,
-    };
-    setTenants((prev) => [...prev, newTenant]);
+  const addTenant = (tenantData: SocietyInsert) => {
+    createSociety.mutate(tenantData);
   };
 
-  const updateTenant = (tenantId: string, updates: Partial<Tenant>) => {
-    setTenants((prev) =>
-      prev.map((tenant) =>
-        tenant.id === tenantId ? { ...tenant, ...updates } : tenant
-      )
-    );
-
+  const updateTenant = (tenantId: string, updates: SocietyUpdate) => {
+    updateSociety.mutate({ id: tenantId, updates });
     if (currentTenant?.id === tenantId) {
-      setCurrentTenant((prev) => (prev ? { ...prev, ...updates } : null));
+      setCurrentTenant((prev: SocietyRow | null) =>
+        prev ? { ...prev, ...updates } : null
+      );
     }
   };
 
   const deleteTenant = (tenantId: string) => {
-    setTenants((prev) => prev.filter((tenant) => tenant.id !== tenantId));
-
+    deleteSociety.mutate(tenantId);
     if (currentTenant?.id === tenantId) {
       setCurrentTenant(null);
       setGlobalView(true);

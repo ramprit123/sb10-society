@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useAuth } from "../contexts/AuthContext";
 import { useTenant } from "../contexts/TenantContext";
 import { useIsMobile } from "../hooks/use-mobile";
 import {
@@ -28,6 +27,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { Separator } from "./ui/separator";
+import { useAuthStore } from "@/stores/authStore";
 
 type ChatbotSize = "normal" | "expanded" | "fullpage";
 
@@ -55,7 +55,7 @@ export const Chatbot: React.FC<ChatbotProps> = ({
   const [isTypewriting, setIsTypewriting] = useState(false);
   const typewriterIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const { currentTenant } = useTenant();
   const isMobile = useIsMobile();
 
