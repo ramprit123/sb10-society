@@ -46,60 +46,12 @@ export const useTenant = () => {
   return context;
 };
 
-const mockTenants: Tenant[] = [
-  {
-    id: "society-1",
-    name: "Green Valley Apartments",
-    address: "123 Green Valley Road, Mumbai, Maharashtra 400001",
-    totalUnits: 120,
-    occupiedUnits: 115,
-    totalResidents: 342,
-    pendingDues: 124500,
-    status: "active",
-    settings: {
-      currency: "INR",
-      timezone: "Asia/Kolkata",
-      maintenanceDay: 1,
-    },
-  },
-  {
-    id: "society-2",
-    name: "Sunrise Heights",
-    address: "456 Sunrise Avenue, Delhi, Delhi 110001",
-    totalUnits: 80,
-    occupiedUnits: 78,
-    totalResidents: 234,
-    pendingDues: 89000,
-    status: "active",
-    settings: {
-      currency: "INR",
-      timezone: "Asia/Kolkata",
-      maintenanceDay: 5,
-    },
-  },
-  {
-    id: "society-3",
-    name: "Ocean View Residency",
-    address: "789 Ocean Drive, Bangalore, Karnataka 560001",
-    totalUnits: 200,
-    occupiedUnits: 185,
-    totalResidents: 555,
-    pendingDues: 245000,
-    status: "active",
-    settings: {
-      currency: "INR",
-      timezone: "Asia/Kolkata",
-      maintenanceDay: 10,
-    },
-  },
-];
-
 export const TenantProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { user } = useAuth();
   const [currentTenant, setCurrentTenant] = useState<Tenant | null>(null);
-  const [tenants, setTenants] = useState<Tenant[]>(mockTenants);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isGlobalView, setGlobalView] = useState(true);
 
   useEffect(() => {
