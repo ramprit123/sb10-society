@@ -9,32 +9,77 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export type Database = {
   public: {
     Tables: {
-      profiles: {
+      user_profiles: {
         Row: {
           id: string;
           email: string;
-          name: string;
-          role: "super_admin" | "admin" | "manager" | "staff";
-          tenants: string[];
+          first_name: string;
+          last_name: string;
+          phone: string;
+          global_role:
+            | "super_admin"
+            | "platform_admin"
+            | "admin"
+            | "secretary"
+            | "chairman"
+            | "treasurer"
+            | "resident"
+            | "staff"
+            | "committee"
+            | "security"
+            | "other";
+          default_society_id?: string;
           avatar?: string;
+          flat_owner_type: "owner" | "tenant";
+          property_type: "residential" | "commercial" | "shop" | "office";
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           email: string;
-          name: string;
-          role: "super_admin" | "admin" | "manager" | "staff";
-          tenants?: string[];
+          first_name: string;
+          last_name: string;
+          phone: string;
+          global_role?:
+            | "super_admin"
+            | "platform_admin"
+            | "admin"
+            | "secretary"
+            | "chairman"
+            | "treasurer"
+            | "resident"
+            | "staff"
+            | "committee"
+            | "security"
+            | "other";
+          default_society_id?: string;
           avatar?: string;
+          flat_owner_type?: "owner" | "tenant";
+          property_type?: "residential" | "commercial" | "shop" | "office";
         };
         Update: {
           id?: string;
           email?: string;
-          name?: string;
-          role?: "super_admin" | "admin" | "manager" | "staff";
-          tenants?: string[];
+          first_name?: string;
+          last_name?: string;
+          phone?: string;
+          global_role?:
+            | "super_admin"
+            | "platform_admin"
+            | "admin"
+            | "secretary"
+            | "chairman"
+            | "treasurer"
+            | "resident"
+            | "staff"
+            | "committee"
+            | "security"
+            | "other";
+          default_society_id?: string;
           avatar?: string;
+          flat_owner_type?: "owner" | "tenant";
+          property_type?: "residential" | "commercial" | "shop" | "office";
         };
       };
       societies: {

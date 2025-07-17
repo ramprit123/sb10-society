@@ -103,7 +103,6 @@ export const TenantProvider: React.FC<{ children: ReactNode }> = ({
   const [isGlobalView, setGlobalView] = useState(true);
 
   useEffect(() => {
-    // Load saved tenant preference
     const savedTenantId = localStorage.getItem("currentTenant");
     if (savedTenantId && user) {
       const tenant = tenants.find((t) => t.id === savedTenantId);

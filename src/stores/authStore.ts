@@ -1,16 +1,16 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
+import {
+  getCurrentUserProfile,
+  createUserProfile,
+  updateCurrentUserProfile,
+  type CreateUserProfileData,
+  type UpdateUserProfileData,
+} from "@/services/userProfilesService";
+import type { Database } from "@/types/database";
 
-interface UserProfile {
-  id: string;
-  email: string;
-  name: string;
-  global_role?: "super_admin" | "platform_admin";
-  default_society_id?: string;
-  avatar?: string;
-  phone?: string;
-}
+type UserProfile = Database["public"]["Tables"]["user_profiles"]["Row"];
 
 interface AuthState {
   user: User | null;
@@ -24,13 +24,13 @@ interface AuthState {
   signUp: (
     email: string,
     password: string,
-    userData: Partial<UserProfile>
+    userData: CreateUserProfileData
   ) => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateProfile: (updates: UpdateUserProfileData) => Promise<void>;
   createProfile: (
     userId: string,
-    userData: Partial<UserProfile>
+    userData: CreateUserProfileData
   ) => Promise<UserProfile>;
   checkProfileTrigger: () => Promise<boolean>;
   initialize: () => void;
@@ -67,7 +67,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signUp: async (
     email: string,
     password: string,
-    userData: Partial<UserProfile>
+    userData: CreateUserProfileData
   ) => {
     try {
       set({ isLoading: true });
@@ -77,48 +77,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         password,
         options: {
           data: {
-            name: userData.name || "",
-            global_role: userData.global_role || null,
-            default_society_id: userData.default_society_id || null,
-            avatar: userData.avatar || null,
-            phone: userData.phone || null,
+            first_name: userData.firstName || "",
+            last_name: userData.lastName || "",
+            phone: userData.phone || "",
           },
         },
       });
 
       if (error) {
+        console.error("Supabase auth error:", error);
         set({ isLoading: false });
         throw error;
       }
 
       // If user is created immediately (email confirmation disabled)
       if (data.user && data.session) {
-        // Wait a moment for the database trigger to create the profile
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
-        // Verify profile was created by the trigger
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
+        try {
+          // Try to get existing profile first
+          const existingProfile = await getCurrentUserProfile();
 
-        if (profileError && profileError.code === "PGRST116") {
-          // Profile doesn't exist, create it manually as fallback
-          console.warn(
-            "Database trigger didn't create profile, creating manually"
-          );
-          await get().createProfile(data.user.id, userData);
-        } else if (profileError) {
-          console.error("Error checking profile:", profileError);
-        } else {
-          // Profile exists, update store
-          set({ profile });
+          if (!existingProfile) {
+            console.warn(
+              "Database trigger didn't create profile, creating manually"
+            );
+            const newProfile = await createUserProfile(data.user.id, {
+              ...userData,
+              email: data.user.email || userData.email,
+            });
+            set({ profile: newProfile });
+          } else {
+            set({ profile: existingProfile });
+          }
+        } catch (createError) {
+          console.error("Error handling profile creation:", createError);
+          throw new Error("Failed to create user profile. Please try again.");
         }
       }
 
-      // Profile will be created automatically by database trigger
-      // Auth state change listener will handle setting user, session, and isAuthenticated
       set({ isLoading: false });
     } catch (error) {
       set({ isLoading: false });
@@ -144,7 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  updateProfile: async (updates: Partial<UserProfile>) => {
+  updateProfile: async (updates: UpdateUserProfileData) => {
     try {
       set({ isLoading: true });
       const { profile } = get();
@@ -153,19 +150,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         return;
       }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", profile.id)
-        .select()
-        .single();
-
-      if (error) {
-        set({ isLoading: false });
-        throw error;
-      }
-
-      set({ profile: { ...profile, ...data }, isLoading: false });
+      const updatedProfile = await updateCurrentUserProfile(updates);
+      set({ profile: updatedProfile, isLoading: false });
     } catch (error) {
       console.error("Error updating profile:", error);
       set({ isLoading: false });
@@ -173,35 +159,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  createProfile: async (userId: string, userData: Partial<UserProfile>) => {
+  createProfile: async (userId: string, userData: CreateUserProfileData) => {
     try {
       set({ isLoading: true });
-      const { user } = get();
-
-      const profileData = {
-        id: userId,
-        email: user?.email || userData.email || "",
-        name: userData.name || "",
-        global_role: userData.global_role || undefined,
-        default_society_id: userData.default_society_id || undefined,
-        avatar: userData.avatar,
-        phone: userData.phone,
-      };
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .insert(profileData)
-        .select()
-        .single();
-
-      if (error) {
-        set({ isLoading: false });
-        throw error;
-      }
-
-      // Update the store with the new profile
-      set({ profile: data as UserProfile, isLoading: false });
-      return data as UserProfile;
+      const newProfile = await createUserProfile(userId, userData);
+      set({ profile: newProfile, isLoading: false });
+      return newProfile;
     } catch (error) {
       console.error("Error creating profile:", error);
       set({ isLoading: false });
@@ -209,19 +172,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  // Utility function to check if profile creation trigger is working
   checkProfileTrigger: async (): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.rpc("check_trigger_exists", {
-        trigger_name: "on_auth_user_created",
-      });
+      // Check if the trigger exists
+      const { data: triggerData, error: triggerError } = await supabase
+        .from("information_schema.triggers")
+        .select("*")
+        .eq("trigger_name", "on_auth_user_created")
+        .single();
 
-      if (error) {
-        console.warn("Could not check trigger status:", error);
+      if (triggerError) {
+        console.warn("Could not check trigger status:", triggerError);
         return false;
       }
 
-      return data || false;
+      console.log("Trigger exists:", triggerData);
+      return true;
     } catch (error) {
       console.warn("Could not check trigger status:", error);
       return false;
@@ -238,17 +204,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: true,
         });
 
-        // Fetch user profile with retry logic
-        const fetchProfile = async (retries = 3) => {
+        const fetchProfile = async (retries = 1) => {
           for (let i = 0; i < retries; i++) {
-            const { data: profile, error } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", session.user.id)
-              .single();
-
-            if (error) {
-              if (error.code === "PGRST116" && i === retries - 1) {
+            try {
+              const profile = await getCurrentUserProfile();
+              if (profile) {
+                set({ profile });
+                break;
+              } else if (i === retries - 1) {
                 // Profile doesn't exist after all retries, create it manually
                 console.warn(
                   "Profile not found after retries, creating manually"
@@ -258,10 +221,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     session.user.id,
                     {
                       email: session.user.email || "",
-                      name:
+                      firstName:
+                        session.user.user_metadata?.first_name ||
                         session.user.user_metadata?.name ||
                         session.user.email?.split("@")[0] ||
                         "",
+                      lastName: session.user.user_metadata?.last_name || "",
+                      phone: session.user.user_metadata?.phone || "",
                     }
                   );
                   set({ profile: newProfile });
@@ -272,19 +238,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                   );
                 }
                 break;
-              } else if (error.code === "PGRST116" && i < retries - 1) {
+              } else {
                 // Profile doesn't exist yet, wait and retry
                 await new Promise((resolve) =>
                   setTimeout(resolve, 1000 * (i + 1))
                 );
                 continue;
-              } else {
-                console.error("Error fetching profile:", error);
-                break;
               }
-            } else {
-              set({ profile });
-              break;
+            } catch (error) {
+              console.error("Error fetching profile:", error);
+              if (i === retries - 1) break;
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * (i + 1))
+              );
             }
           }
         };
@@ -303,17 +269,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isLoading: false,
         });
 
-        // Fetch user profile with retry logic for new sign-ins
-        const fetchProfile = async (retries = 3) => {
+        const fetchProfile = async (retries = 1) => {
           for (let i = 0; i < retries; i++) {
-            const { data: profile, error } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("id", session.user.id)
-              .single();
-
-            if (error) {
-              if (error.code === "PGRST116" && i === retries - 1) {
+            try {
+              const profile = await getCurrentUserProfile();
+              if (profile) {
+                set({ profile });
+                break;
+              } else if (i === retries - 1) {
                 // Profile doesn't exist after all retries, create it manually
                 console.warn(
                   "Profile not found after retries, creating manually"
@@ -323,10 +286,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     session.user.id,
                     {
                       email: session.user.email || "",
-                      name:
+                      firstName:
+                        session.user.user_metadata?.first_name ||
                         session.user.user_metadata?.name ||
                         session.user.email?.split("@")[0] ||
                         "",
+                      lastName: session.user.user_metadata?.last_name || "",
+                      phone: session.user.user_metadata?.phone || "",
                     }
                   );
                   set({ profile: newProfile });
@@ -337,19 +303,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                   );
                 }
                 break;
-              } else if (error.code === "PGRST116" && i < retries - 1) {
+              } else {
                 // Profile doesn't exist yet, wait and retry
                 await new Promise((resolve) =>
                   setTimeout(resolve, 1000 * (i + 1))
                 );
                 continue;
-              } else {
-                console.error("Error fetching profile:", error);
-                break;
               }
-            } else {
-              set({ profile });
-              break;
+            } catch (error) {
+              console.error("Error fetching profile:", error);
+              if (i === retries - 1) break;
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * (i + 1))
+              );
             }
           }
         };

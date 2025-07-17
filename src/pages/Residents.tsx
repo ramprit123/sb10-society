@@ -17,7 +17,6 @@ import EditResidentModal from "@/components/modals/EditResidentModal";
 import VehicleManagement from "@/components/VehicleManagement";
 import { useResidents, useDeleteResident } from "@/services/residentsService";
 import { useTenant } from "@/contexts/TenantContext";
-import { insertDummyResidents } from "@/utils/dummyData";
 import {
   Select,
   SelectContent,
@@ -46,7 +45,6 @@ const Residents: React.FC = () => {
   // Function to insert dummy data
   const handleInsertDummyData = async () => {
     try {
-      await insertDummyResidents();
       // React Query will automatically refetch due to invalidation
     } catch (error) {
       console.error("Failed to insert dummy data:", error);

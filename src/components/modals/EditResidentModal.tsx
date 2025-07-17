@@ -1,25 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  User,
-  UserCheck,
-  Mail,
-  Phone,
-  Home,
-  Calendar,
-  Shield,
-  AlertCircle,
-  Camera,
-  ImageIcon,
-} from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useUpdateResident, useOwners } from "@/services/residentsService";
-import { useTenant } from "@/contexts/TenantContext";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -42,9 +25,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTenant } from "@/contexts/TenantContext";
+import { supabase } from "@/lib/supabase";
+import { useOwners, useUpdateResident } from "@/services/residentsService";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Calendar,
+  Camera,
+  Home,
+  ImageIcon,
+  Mail,
+  Phone,
+  User,
+  UserCheck,
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const formSchema = z
   .object({

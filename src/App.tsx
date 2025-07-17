@@ -1,35 +1,35 @@
+import ProtectedRoute from "@/components/ProtectedRoute";
+import TenantRoute from "@/components/TenantRoute";
+import AuthLayout from "@/layouts/AuthLayout";
+import DashboardLayout from "@/layouts/DashboardLayout";
+import AccessControl from "@/pages/AccessControl";
+import AllSocieties from "@/pages/AllSocieties";
+import Analytics from "@/pages/Analytics";
+import Announcements from "@/pages/Announcements";
+import Login from "@/pages/auth/Login";
+import Register from "@/pages/auth/Register";
+import Complaints from "@/pages/Complaints";
+import Dashboard from "@/pages/Dashboard";
+import EventsNotices from "@/pages/EventsNotices";
+import Facilities from "@/pages/Facilities";
+import FAQManagement from "@/pages/FAQManagement";
+import FinancialReports from "@/pages/FinancialReports";
+import MaintenanceBills from "@/pages/MaintenanceBills";
+import Meetings from "@/pages/Meetings";
+import Payments from "@/pages/Payments";
+import PollsSurveys from "@/pages/PollsSurveys";
+import Residents from "@/pages/Residents";
+import Security from "@/pages/Security";
+import Settings from "@/pages/Settings";
+import SystemSettings from "@/pages/SystemSettings";
+import UserManagement from "@/pages/UserManagement";
+import VisitorLogs from "@/pages/VisitorLogs";
 import {
   Navigate,
   Route,
   BrowserRouter as Router,
   Routes,
 } from "react-router-dom";
-import ProtectedRoute from "./components/ProtectedRoute";
-import TenantRoute from "./components/TenantRoute";
-import AuthLayout from "./layouts/AuthLayout";
-import DashboardLayout from "./layouts/DashboardLayout";
-import AccessControl from "./pages/AccessControl";
-import AllSocieties from "./pages/AllSocieties";
-import Analytics from "./pages/Analytics";
-import Announcements from "./pages/Announcements";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import Complaints from "./pages/Complaints";
-import Dashboard from "./pages/Dashboard";
-import EventsNotices from "./pages/EventsNotices";
-import Facilities from "./pages/Facilities";
-import FinancialReports from "./pages/FinancialReports";
-import MaintenanceBills from "./pages/MaintenanceBills";
-import Meetings from "./pages/Meetings";
-import Payments from "./pages/Payments";
-import PollsSurveys from "./pages/PollsSurveys";
-import Residents from "./pages/Residents";
-import Security from "./pages/Security";
-import Settings from "./pages/Settings";
-import SystemSettings from "./pages/SystemSettings";
-import UserManagement from "./pages/UserManagement";
-import VisitorLogs from "./pages/VisitorLogs";
-import FAQManagement from "./pages/FAQManagement";
 import { Toaster } from "sonner";
 
 function App() {

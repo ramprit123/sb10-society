@@ -1,38 +1,74 @@
-// TypeScript interfaces for Society Management System
-// These interfaces match the Supabase database schema
-
 export interface Database {
   public: {
     Tables: {
-      profiles: {
+      user_profiles: {
         Row: {
           id: string;
           email: string;
-          name: string;
-          global_role?: "super_admin" | "platform_admin";
-          default_society_id?: string;
-          avatar?: string;
-          phone?: string;
+          first_name: string;
+          last_name: string;
+          phone: string | null;
+          global_role:
+            | "super_admin"
+            | "platform_admin"
+            | "admin"
+            | "secretary"
+            | "chairman"
+            | "treasurer"
+            | "resident"
+            | "staff"
+            | "security"
+            | "other";
+          default_society_id: string | null;
+          avatar: string | null;
+          flat_owner_type: "owner" | "tenant";
+          property_type: "residential" | "commercial" | "shop" | "office";
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           email: string;
-          name: string;
-          global_role?: "super_admin" | "platform_admin";
-          default_society_id?: string;
-          avatar?: string;
-          phone?: string;
+          first_name: string;
+          last_name: string;
+          phone?: string | null;
+          global_role?:
+            | "super_admin"
+            | "platform_admin"
+            | "admin"
+            | "secretary"
+            | "chairman"
+            | "treasurer"
+            | "resident"
+            | "staff"
+            | "security"
+            | "other";
+          default_society_id?: string | null;
+          avatar?: string | null;
+          flat_owner_type?: "owner" | "tenant";
+          property_type?: "residential" | "commercial" | "shop" | "office";
         };
         Update: {
           id?: string;
           email?: string;
-          name?: string;
-          global_role?: "super_admin" | "platform_admin";
-          default_society_id?: string;
-          avatar?: string;
-          phone?: string;
+          first_name?: string;
+          last_name?: string;
+          phone?: string | null;
+          global_role?:
+            | "super_admin"
+            | "platform_admin"
+            | "admin"
+            | "secretary"
+            | "chairman"
+            | "treasurer"
+            | "resident"
+            | "staff"
+            | "security"
+            | "other";
+          default_society_id?: string | null;
+          avatar?: string | null;
+          flat_owner_type?: "owner" | "tenant";
+          property_type?: "residential" | "commercial" | "shop" | "office";
         };
       };
       societies: {
@@ -936,11 +972,24 @@ export interface Vehicle {
 export interface UserProfile {
   id: string;
   email: string;
-  name: string;
-  globalRole?: "super_admin" | "platform_admin";
+  firstName: string;
+  lastName: string;
+  phone: string;
+  globalRole?:
+    | "super_admin"
+    | "platform_admin"
+    | "admin"
+    | "secretary"
+    | "chairman"
+    | "treasurer"
+    | "resident"
+    | "staff"
+    | "security"
+    | "other";
   defaultSocietyId?: string;
   avatar?: string;
-  phone?: string;
+  flatOwnerType?: "owner" | "tenant";
+  propertyType?: "residential" | "commercial" | "shop" | "office";
 }
 
 export interface UserSocietyMembership {

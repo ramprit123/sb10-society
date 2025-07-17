@@ -1,23 +1,53 @@
 import { useAuthStore } from "@/stores/authStore";
-import { Building, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
-import React, { useState } from "react";
+import { useSocietyStore } from "@/stores/societyStore";
+import { Eye, EyeOff, Lock, Mail, User, Phone } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
-    global_role: "platform_admin",
-    default_society_id: "society-1",
-    companyName: "society-1",
+    globalRole: "platform_admin",
+    defaultSocietyId: "",
+    flatOwnerType: "owner",
+    propertyType: "residential",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const { signUp, isLoading } = useAuthStore();
+  const {
+    societies,
+    fetchSocieties,
+    isLoading: societiesLoading,
+  } = useSocietyStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Fetch societies on component mount
+    const loadSocieties = async () => {
+      try {
+        await fetchSocieties();
+      } catch (error) {
+        console.error("Failed to fetch societies:", error);
+        setError("Failed to load societies. Please refresh the page.");
+      }
+    };
+
+    loadSocieties();
+  }, [fetchSocieties]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -32,6 +62,27 @@ const Register: React.FC = () => {
     e.preventDefault();
     setError("");
 
+    // Validate form fields
+    if (!formData.firstName.trim()) {
+      setError("First name is required");
+      return;
+    }
+
+    if (!formData.lastName.trim()) {
+      setError("Last name is required");
+      return;
+    }
+
+    if (!formData.email.trim()) {
+      setError("Email is required");
+      return;
+    }
+
+    if (!formData.phone.trim()) {
+      setError("Phone number is required");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -42,14 +93,49 @@ const Register: React.FC = () => {
       return;
     }
 
+    if (!formData.defaultSocietyId) {
+      setError("Please select a society");
+      return;
+    }
+
     try {
+      console.log("Submitting registration with data:", {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        globalRole: formData.globalRole,
+        defaultSocietyId: formData.defaultSocietyId,
+        flatOwnerType: formData.flatOwnerType,
+        propertyType: formData.propertyType,
+      });
+
       await signUp(formData.email, formData.password, {
-        name: formData.name,
-        global_role: formData.global_role as "super_admin" | "platform_admin",
-        default_society_id: formData.default_society_id,
+        first_name: formData.firstName.trim(),
+        last_name: formData.lastName.trim(),
+        phone: formData.phone.trim(),
+        global_role: formData.globalRole as
+          | "super_admin"
+          | "platform_admin"
+          | "admin"
+          | "secretary"
+          | "chairman"
+          | "treasurer"
+          | "resident"
+          | "staff"
+          | "security"
+          | "other",
+        default_society_id: formData.defaultSocietyId,
+        flat_owner_type: formData.flatOwnerType as "owner" | "tenant",
+        property_type: formData.propertyType as
+          | "residential"
+          | "commercial"
+          | "shop"
+          | "office",
       });
       navigate("/");
     } catch (err: any) {
+      console.error("Registration error:", err);
       setError(err.message || "Registration failed. Please try again.");
     }
   };
@@ -68,23 +154,69 @@ const Register: React.FC = () => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              First Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                value={formData.firstName}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
+                placeholder="Enter your first name"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="lastName"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Last Name
+            </label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={handleChange}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
+                placeholder="Enter your last name"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
         <div>
           <label
-            htmlFor="name"
+            htmlFor="phone"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Full Name
+            Phone Number
           </label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
-              id="name"
-              name="name"
-              type="text"
-              value={formData.name}
+              id="phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
               onChange={handleChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter your full name"
+              placeholder="Enter your phone number"
               required
             />
           </div>
@@ -114,42 +246,113 @@ const Register: React.FC = () => {
 
         <div>
           <label
-            htmlFor="role"
+            htmlFor="globalRole"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             Role
           </label>
-          <select
-            id="role"
-            name="global_role"
-            value={formData.global_role}
-            onChange={handleChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
-            required
+          <Select
+            value={formData.globalRole}
+            onValueChange={(value) =>
+              setFormData((prev) => ({ ...prev, globalRole: value }))
+            }
           >
-            <option value="platform_admin">Platform Admin</option>
-            <option value="super_admin">Super Admin</option>
-          </select>
+            <SelectTrigger className="w-full px-4 py-6 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent">
+              <SelectValue placeholder="Select a role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="platform_admin">Platform Admin</SelectItem>
+              <SelectItem value="super_admin">Super Admin</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="secretary">Secretary</SelectItem>
+              <SelectItem value="chairman">Chairman</SelectItem>
+              <SelectItem value="treasurer">Treasurer</SelectItem>
+              <SelectItem value="resident">Resident</SelectItem>
+              <SelectItem value="staff">Staff</SelectItem>
+              <SelectItem value="security">Security</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
           <label
-            htmlFor="companyName"
+            htmlFor="defaultSocietyId"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Company/Society Name
+            Society {societies.length > 0 && `(${societies.length} available)`}
           </label>
-          <div className="relative">
-            <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <input
-              id="companyName"
-              name="companyName"
-              type="text"
-              value={formData.companyName}
-              onChange={handleChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent"
-              placeholder="Enter company or society name"
-            />
+          <Select
+            value={formData.defaultSocietyId}
+            onValueChange={(value) =>
+              setFormData((prev) => ({ ...prev, defaultSocietyId: value }))
+            }
+            disabled={societiesLoading}
+          >
+            <SelectTrigger className="w-full px-4 py-6 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent">
+              <SelectValue
+                placeholder={
+                  societiesLoading ? "Loading societies..." : "Select a society"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {societies.map((society) => (
+                <SelectItem key={society.id} value={society.id}>
+                  {society.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="flatOwnerType"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Flat Owner Type
+            </label>
+            <Select
+              value={formData.flatOwnerType}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, flatOwnerType: value }))
+              }
+            >
+              <SelectTrigger className="w-full px-4 py-6 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent">
+                <SelectValue placeholder="Select flat owner type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="owner">Owner</SelectItem>
+                <SelectItem value="tenant">Tenant</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="propertyType"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Property Type
+            </label>
+            <Select
+              value={formData.propertyType}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, propertyType: value }))
+              }
+            >
+              <SelectTrigger className="w-full px-4 py-6 border border-gray-300 rounded-lg focus:none focus:ring-purple-500 focus:border-transparent">
+                <SelectValue placeholder="Select property type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="residential">Residential</SelectItem>
+                <SelectItem value="commercial">Commercial</SelectItem>
+                <SelectItem value="shop">Shop</SelectItem>
+                <SelectItem value="office">Office</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
-import { supabase } from "../lib/supabase";
-import { Database } from "../types/database";
+import { supabase } from "@/lib/supabase";
+import { Database } from "@/types/database";
 
 type ComplaintRow = Database["public"]["Tables"]["complaints"]["Row"];
 type ComplaintInsert = Database["public"]["Tables"]["complaints"]["Insert"];
@@ -16,7 +16,6 @@ export interface ComplaintWithResident extends ComplaintRow {
 }
 
 export class ComplaintsService {
-  // Create a new complaint
   async createComplaint(complaint: ComplaintInsert): Promise<ComplaintRow> {
     const { data, error } = await supabase
       .from("complaints")
@@ -28,7 +27,6 @@ export class ComplaintsService {
     return data;
   }
 
-  // Get all complaints for a society
   async getComplaintsBySociety(
     societyId: string
   ): Promise<ComplaintWithResident[]> {
@@ -53,7 +51,6 @@ export class ComplaintsService {
     return data as ComplaintWithResident[];
   }
 
-  // Get complaints by resident
   async getComplaintsByResident(residentId: string): Promise<ComplaintRow[]> {
     const { data, error } = await supabase
       .from("complaints")
@@ -65,7 +62,6 @@ export class ComplaintsService {
     return data;
   }
 
-  // Update complaint status
   async updateComplaintStatus(
     complaintId: string,
     status: "open" | "in_progress" | "resolved" | "closed",
