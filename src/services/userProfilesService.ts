@@ -362,21 +362,6 @@ export async function removeUserAvatar(userId: string): Promise<void> {
     // Get current profile to get avatar URL
     const profile = await getUserProfile(userId);
     if (!profile?.avatar) return;
-
-    // Extract file path from URL
-    const avatarPath = profile.avatar.split("/").pop();
-    if (avatarPath) {
-      // Remove file from storage
-      const { error: storageError } = await supabase.storage
-        .from("user-avatars")
-        .remove([`avatars/${avatarPath}`]);
-
-      if (storageError) {
-        console.error("Error removing avatar from storage:", storageError);
-        // Continue to update profile even if storage deletion fails
-      }
-    }
-
     // Update profile to remove avatar URL
     await updateUserProfile(userId, {
       avatar: undefined,

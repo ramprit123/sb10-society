@@ -169,24 +169,6 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      // First check if bucket exists
-      const { data: buckets, error: bucketsError } =
-        await supabase.storage.listBuckets();
-
-      if (bucketsError) {
-        throw new Error(
-          "Unable to access storage. Please contact administrator."
-        );
-      }
-
-      const bucketExists = buckets?.some((bucket) => bucket.id === "residents");
-
-      if (!bucketExists) {
-        throw new Error(
-          "Storage bucket 'residents' not found. Please create it in the Supabase Dashboard first or contact administrator."
-        );
-      }
-
       const { error: uploadError } = await supabase.storage
         .from("residents")
         .upload(filePath, file);

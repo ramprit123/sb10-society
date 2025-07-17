@@ -13,11 +13,11 @@ import {
   Building2,
   DollarSign,
 } from "lucide-react";
-import { useSocietyStore } from "../stores/societyStore";
-import AddResidentModal from "../components/modals/AddResidentModal";
-import GenerateBillModal from "../components/modals/GenerateBillModal";
-import CreateNoticeModal from "../components/modals/CreateNoticeModal";
-import ScheduleMeetingModal from "../components/modals/ScheduleMeetingModal";
+import { useSocietyStore } from "@/stores/societyStore";
+import AddResidentModal from "@/components/modals/AddResidentModal";
+import GenerateBillModal from "@/components/modals/GenerateBillModal";
+import CreateNoticeModal from "@/components/modals/CreateNoticeModal";
+import ScheduleMeetingModal from "@/components/modals/ScheduleMeetingModal";
 
 const Dashboard: React.FC = () => {
   const { currentSociety, societies, isGlobalView } = useSocietyStore();
