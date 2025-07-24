@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { supabase } from "../lib/supabase";
-import { DEV_UUIDS } from "../utils/uuidUtils";
 
 interface Society {
   id: string;
@@ -39,55 +38,6 @@ interface SocietyState {
   setGlobalView: (global: boolean) => void;
 }
 
-// Mock data for now - you can replace this with real data from Supabase
-const mockSocieties: Society[] = [
-  {
-    id: DEV_UUIDS.SOCIETY_1,
-    name: "Greenview Heights",
-    address: "123 Park Avenue, Mumbai, MH 400001",
-    totalUnits: 120,
-    occupiedUnits: 98,
-    totalResidents: 342,
-    pendingDues: 125000,
-    status: "active",
-    settings: {
-      currency: "INR",
-      timezone: "Asia/Kolkata",
-      maintenanceDay: 5,
-    },
-  },
-  {
-    id: DEV_UUIDS.SOCIETY_2,
-    name: "Royal Residency",
-    address: "456 Queens Road, Delhi, DL 110001",
-    totalUnits: 80,
-    occupiedUnits: 72,
-    totalResidents: 245,
-    pendingDues: 89000,
-    status: "active",
-    settings: {
-      currency: "INR",
-      timezone: "Asia/Kolkata",
-      maintenanceDay: 10,
-    },
-  },
-  {
-    id: DEV_UUIDS.SOCIETY_3,
-    name: "Sunset Villa",
-    address: "789 Beach Road, Bangalore, KA 560001",
-    totalUnits: 45,
-    occupiedUnits: 42,
-    totalResidents: 156,
-    pendingDues: 45000,
-    status: "maintenance",
-    settings: {
-      currency: "INR",
-      timezone: "Asia/Kolkata",
-      maintenanceDay: 15,
-    },
-  },
-];
-
 export const useSocietyStore = create<SocietyState>((set, get) => ({
   currentSociety: null,
   societies: [],
@@ -104,59 +54,6 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
         console.warn("Error fetching societies from database:", error);
         console.log("Using mock societies as fallback");
 
-        // Use mock societies with proper UUIDs as fallback
-        const fallbackSocieties: Society[] = [
-          {
-            id: DEV_UUIDS.SOCIETY_1,
-            name: "Greenview Heights",
-            address: "123 Park Avenue, Mumbai, MH 400001",
-            totalUnits: 120,
-            occupiedUnits: 98,
-            totalResidents: 342,
-            pendingDues: 125000,
-            status: "active",
-            settings: {
-              currency: "INR",
-              timezone: "Asia/Kolkata",
-              maintenanceDay: 5,
-            },
-          },
-          {
-            id: DEV_UUIDS.SOCIETY_2,
-            name: "Sunset Gardens",
-            address: "456 Garden Street, Mumbai, MH 400002",
-            totalUnits: 80,
-            occupiedUnits: 72,
-            totalResidents: 230,
-            pendingDues: 85000,
-            status: "active",
-            settings: {
-              currency: "INR",
-              timezone: "Asia/Kolkata",
-              maintenanceDay: 10,
-            },
-          },
-          {
-            id: DEV_UUIDS.SOCIETY_3,
-            name: "Royal Residency",
-            address: "789 Royal Road, Mumbai, MH 400003",
-            totalUnits: 150,
-            occupiedUnits: 142,
-            totalResidents: 450,
-            pendingDues: 200000,
-            status: "active",
-            settings: {
-              currency: "INR",
-              timezone: "Asia/Kolkata",
-              maintenanceDay: 1,
-            },
-          },
-        ];
-
-        set({
-          societies: fallbackSocieties,
-          isLoading: false,
-        });
         return;
       }
 
@@ -194,22 +91,7 @@ export const useSocietyStore = create<SocietyState>((set, get) => ({
       }
     } catch (error) {
       console.error("Error fetching societies:", error);
-
-      // Fallback to mock data if Supabase fails
       console.warn("Falling back to mock data due to error:", error);
-      set({
-        societies: mockSocieties,
-        isLoading: false,
-      });
-
-      // Set current society from localStorage if available
-      const savedSocietyId = localStorage.getItem("currentSociety");
-      if (savedSocietyId) {
-        const savedSociety = mockSocieties.find((s) => s.id === savedSocietyId);
-        if (savedSociety) {
-          set({ currentSociety: savedSociety });
-        }
-      }
     }
   },
 

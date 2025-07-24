@@ -17,7 +17,6 @@ import EditResidentModal from "@/components/modals/EditResidentModal";
 import VehicleManagement from "@/components/VehicleManagement";
 import { useResidents, useDeleteResident } from "@/services/residentsService";
 import { useTenant } from "@/contexts/TenantContext";
-import { DEV_UUIDS } from "@/utils/uuidUtils";
 import {
   Select,
   SelectContent,
@@ -37,7 +36,7 @@ const Residents: React.FC = () => {
   const [selectedResident, setSelectedResident] = useState<any>(null);
 
   // Default to first society if no tenant is selected
-  const societyId = currentTenant?.id || DEV_UUIDS.SOCIETY_1;
+  const societyId = currentTenant?.id ?? "";
 
   // Use React Query to fetch residents
   const { data: residents = [], isLoading, error } = useResidents(societyId);

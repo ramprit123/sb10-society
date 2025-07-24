@@ -26,7 +26,6 @@ import {
 import { useTenant } from "@/contexts/TenantContext";
 import { supabase } from "@/lib/supabase";
 import { useCreateResident, useOwners } from "@/services/residentsService";
-import { DEV_UUIDS } from "@/utils/uuidUtils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Calendar,
@@ -104,7 +103,7 @@ const AddResidentModal: React.FC<AddResidentModalProps> = ({
   editingResident,
 }) => {
   const { currentTenant } = useTenant();
-  const societyId = currentTenant?.id || DEV_UUIDS.SOCIETY_1;
+  const societyId = currentTenant?.id ?? "";
   const createResident = useCreateResident(societyId);
   const { data: owners = [] } = useOwners(societyId);
 
